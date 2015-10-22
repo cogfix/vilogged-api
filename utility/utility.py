@@ -137,10 +137,31 @@ class Utility(object):
     def build_filter(fields=None, url_params=None):
         query = {}
         for key in url_params:
-            if key in fields:
-                query[key] = url_params[key]
+            src_key = key
+            clean_field = Utility.clean_field(key)
+            if clean_field in fields:
+                key = Utility.transform_field(key)
+                query['{}'.format(key)] = url_params[src_key]
 
         return query
+
+    @staticmethod
+    def transform_field(field):
+        src_field = field
+        field = field.replace('.', '__').replace('-', '__')
+        field = '{}__exact'.format(field)
+        f_arr = src_field.split('-')
+        if len(f_arr) > 1:
+            q = f_arr.pop()
+            if q == 'ne':
+                 field = field.replace('__exact', '')
+
+        return field
+
+    @staticmethod
+    def clean_field(field):
+        field = field.replace('.', '__').replace('-lte', '').replace('-gte', '').replace('-lte', '').replace('-lt', '').replace('-gt', '').replace('-ne', '')
+        return field
 
     @staticmethod
     def filter_search_field(request, search_fields):
@@ -154,6 +175,7 @@ class PaginationBuilder(object):
 
     def get_paged_data(self, model, request, filter_fields, search_fields, def_order_by='-created'):
         query = Utility.build_filter(filter_fields, request.query_params)
+
         order_by = request.query_params.get('order_by', def_order_by)
         _model_list = model.objects.filter(**query).order_by(order_by)
         if ('q' in request.query_params) and request.query_params['q'].strip():
