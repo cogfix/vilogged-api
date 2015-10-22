@@ -1,0 +1,23 @@
+{
+  "authSource": "api",
+  "ldap": {
+    "host": "",
+    "user": "",
+    "password": "",
+    "port": "",
+    "baseDN": ""
+  },
+  "database": {
+    "name": "db.sqlite",
+    "host": "localhost",
+    "user": "",
+    "password": "",
+    "port": "",
+    "type": "sqlite"
+  },
+  "system": {
+    "version": "1.0.0",
+    "name": "viLogged Visitor Management System",
+    "lastUpdate": ""
+  }
+}

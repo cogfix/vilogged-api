@@ -1,0 +1,10 @@
+django-braces
+git+git://github.com/ottoyiu/django-cors-headers.git
+django-extensions
+django-filter
+django-uuidfield
+djangorestframework
+djoser
+httplib2
+simplejson
+six

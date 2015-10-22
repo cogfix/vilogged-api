@@ -1,0 +1,6 @@
+vi-server.out.log
+*.pyc
+config.json
+db.sqlite
+.idea
+core/static/*
