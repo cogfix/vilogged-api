@@ -1,5 +1,5 @@
 from core.config_manager import ConfigManager
-from user_profile.models import UserProfile, Department
+from core.models import UserProfile, Department
 import ldap
 
 

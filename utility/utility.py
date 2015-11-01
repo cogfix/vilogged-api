@@ -9,6 +9,8 @@ import json
 import re
 import threading
 from datetime import datetime
+from django.db.models.fields import DateField, DateTimeField, TimeField, CharField, IntegerField
+from django.db.models import ForeignKey
 
 class Utility(object):
 
@@ -134,27 +136,38 @@ class Utility(object):
         return found_entries
 
     @staticmethod
-    def build_filter(fields=None, url_params=None):
+    def build_filter(fields=None, url_params=None, model=None):
         query = {}
         for key in url_params:
             src_key = key
             clean_field = Utility.clean_field(key)
             if clean_field in fields:
-                key = Utility.transform_field(key)
-                query['{}'.format(key)] = url_params[src_key]
-
+                key = Utility.transform_field(key, model, clean_field)
+                query['{}'.format(key)] = Utility.format_value(clean_field, url_params[src_key], model)
         return query
 
     @staticmethod
-    def transform_field(field):
+    def transform_field(field, model, key):
         src_field = field
         field = field.replace('.', '__').replace('-', '__')
-        field = '{}__exact'.format(field)
+        field = '{}'.format(field)
         f_arr = src_field.split('-')
+        try:
+            instance = model.objects.model._meta.get_field(key)
+            if Utility.get_fk_model(model, key) is not None:
+                field = field.replace('__iexact', '')
+            if isinstance(instance, (DateTimeField, DateField, TimeField)):
+                field = field.replace('__iexact', '')
+            if isinstance(instance, (CharField)):
+                field = '{}__iexact'.format(field)
+        except:
+            pass
+
         if len(f_arr) > 1:
             q = f_arr.pop()
             if q == 'ne':
-                 field = field.replace('__exact', '')
+                 field = field.replace('__iexact', '')
+
 
         return field
 
@@ -169,13 +182,51 @@ class Utility(object):
             search_fields = request.query_params['only-fields'].split(',')
         return search_fields
 
+    @staticmethod
+    def format_value(key, value, model):
+        formatted = Utility.to_none(value)
+        try:
+            instance = model.objects.model._meta.get_field(key)
+            if formatted is not None:
+                if isinstance(instance, (DateTimeField)):
+                    try:
+                        formatted = datetime.strptime(value, '%Y-%m-%dT%H:%M:%S.%fZ')
+                    except ValueError:
+                        formatted = datetime.strptime(value, '%Y-%m-%d').date()
+                if isinstance(instance, (TimeField)):
+                    formatted = datetime.strptime(value, '%H:%M:%S').time()
 
+                if isinstance(instance, (CharField)):
+                    pass
+                if isinstance(instance, (IntegerField)):
+                    pass
+        except:
+            pass
+
+        return formatted
+
+    @staticmethod
+    def get_fk_model(model, fieldname):
+        '''returns None if not foreignkey, otherswise the relevant model'''
+        field_object, model, direct, m2m = model._meta.get_field_by_name(fieldname)
+        if not m2m and direct and isinstance(field_object, ForeignKey):
+            return field_object.rel.to
+        return None
+
+    @staticmethod
+    def to_none(value):
+        if value == 'false':
+            return False
+        if value == 'true':
+            return True
+        if value == '' or value == 'null':
+            return None
+        return value
 
 class PaginationBuilder(object):
 
     def get_paged_data(self, model, request, filter_fields, search_fields, def_order_by='-created'):
-        query = Utility.build_filter(filter_fields, request.query_params)
-
+        query = Utility.build_filter(filter_fields, request.query_params, model)
         order_by = request.query_params.get('order_by', def_order_by)
         _model_list = model.objects.filter(**query).order_by(order_by)
         if ('q' in request.query_params) and request.query_params['q'].strip():

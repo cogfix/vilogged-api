@@ -8,7 +8,7 @@ from rest_framework.authtoken.models import Token
 from core.config_manager import ConfigManager
 from core.ldap import LDAPManager
 import json
-from user_profile.models import UserProfile, Department
+from core.models import UserProfile, Department
 from api.v1.department.views import DepartmentSerializer
 
 model = UserProfile
@@ -23,11 +23,13 @@ FILTER_FIELDS = [
     'home_phone',
     'image',
     'department__name',
+    'department',
     'gender',
     'first_name',
     'last_name',
     'is_active',
     'is_staff',
+    'date_joined'
 ]
 SEARCH_FIELDS = [
     'username',
@@ -154,7 +156,7 @@ class AuthUser(views.APIView):
 
         config = ConfigManager().get_config()
         user = None
-
+        print ('here')
         username = request.data.get('username', None)
         password = request.data.get('password', None)
 
