@@ -1,5 +1,5 @@
 from core.models import Appointments, Visitors, VisitorGroup, Company, Entrance
-from user_profile.models import UserProfile, Department
+from core.models import UserProfile, Department
 from rest_framework import serializers, generics, mixins, status, permissions
 from django.core import serializers as dj_serializer
 from rest_framework.response import Response
@@ -27,9 +27,6 @@ FILTER_FIELDS = [
     'escort_required',
     'is_approved',
     'is_expired',
-    'checked_in',
-    'checked_out',
-    'label_code',
     'teams',
     'entrance',
     'created',
@@ -49,13 +46,8 @@ SEARCH_FIELDS = [
     'escort_required',
     'is_approved',
     'is_expired',
-    'checked_in',
-    'checked_out',
-    'label_code',
     'teams',
-    'entrance',
-    'created_by__name',
-    'modified_by__name'
+    'entrance'
 ]
 
 class AppointmentSerializer(serializers.ModelSerializer):
@@ -79,9 +71,6 @@ class AppointmentSerializer(serializers.ModelSerializer):
             'escort_required',
             'is_approved',
             'is_expired',
-            'checked_in',
-            'checked_out',
-            'label_code',
             'teams',
             'entrance',
             'created',
@@ -155,8 +144,14 @@ class AppointmentDetail(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixi
 def nest_row(row, id=None):
     if id is not None:
         row['_id'] = id
-    row['visitor'] = Utility.get_nested(Visitors, VisitorSerializer, row['visitor'])
-    row['host'] = Utility.get_nested(UserProfile, UserSerializer, row['host'])
+    visitor = Utility.get_nested(Visitors, VisitorSerializer, row['visitor'])
+    host = Utility.get_nested(UserProfile, UserSerializer, row['host'])
+    if len(visitor) > 0 and id is not None:
+        del visitor['image']
+    if len(host) > 0 and id is not None:
+            del host['image']
+    row['visitor'] = visitor
+    row['host'] = host
     row['entrance'] = Utility.get_nested(Entrance, EntranceSerializer, row['entrance'])
     if type(row['visitor']) is dict and len(row['visitor']) > 0:
         row['visitor']['company'] = Utility.get_nested(Company, CompanySerializer, row['visitor']['company'])

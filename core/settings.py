@@ -12,13 +12,12 @@ https://docs.djangoproject.com/en/1.8/ref/settings/
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
-import os
 import sys
 import platform
 from config_manager import ConfigManager
 DB_CONFIG = ConfigManager().get_config('database')
 SYS_OS = platform.system()
-AUTH_USER_MODEL = 'user_profile.UserProfile'
+AUTH_USER_MODEL = 'core.UserProfile'
 
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PROJECT_PARENT = os.path.dirname(PROJECT_ROOT)
@@ -53,7 +52,6 @@ INSTALLED_APPS = (
     'rest_framework.authtoken',
     'django_extensions',
     'core',
-    'user_profile',
 )
 
 MIDDLEWARE_CLASSES = (

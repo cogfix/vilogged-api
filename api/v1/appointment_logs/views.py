@@ -3,47 +3,46 @@ from rest_framework.response import Response
 from utility.utility import Utility, PaginationBuilder
 from django.core import serializers as dj_serializer
 import json
-from core.models import Department
-model = Department
-
+from core.models import Appointments, AppointmentLogs, UserProfile, Visitors
+from api.v1.appointments.views import AppointmentSerializer
+from api.v1.user.views import UserSerializer
+from api.v1.visitor.views import VisitorSerializer
+model = AppointmentLogs
 FILTER_FIELDS = [
     '_id',
     '_rev',
-    'name',
-    'floor',
+    'appointment',
+    'appointment__is_approved',
+    'appointment__is_expired',
+    'checked_in',
+    'checked_out',
+    'label_code',
     'modified',
-    'created_by__name',
-    'modified_by__name'
+    'created_by',
+    'modified_by'
 ]
 SEARCH_FIELDS = [
-    'name',
-    'floor',
-    'created_by__name',
-    'modified_by__name'
+    'label_code'
 ]
 
-class DepartmentSerializer(serializers.ModelSerializer):
-
-    def validate(self, data):
-        return data
+class AppointmentLogSerializer(serializers.ModelSerializer):
 
     class Meta:
-        model = Department
+        model = AppointmentLogs
         fields = (
             '_id',
             '_rev',
-            'name',
-            'floor',
-            'created',
+            'appointment',
+            'checked_in',
+            'checked_out',
+            'label_code',
             'modified',
             'created_by',
             'modified_by'
         )
-        filter_fields = ('is_approved', 'is_expired', 'checked_in', 'checked_out', 'label_code', 'start_date')
 
 
-
-class DepartmentList(generics.ListAPIView):
+class AppointmentLogList(generics.ListAPIView):
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
 
     def get(self, request, **kwargs):
@@ -63,26 +62,18 @@ class DepartmentList(generics.ListAPIView):
         })
 
 
-class DepartmentDetail(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.DestroyModelMixin, generics.GenericAPIView, mixins.CreateModelMixin):
-    queryset = Department.objects.all()
-    serializer_class = DepartmentSerializer
+class AppointmentLogDetail(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.DestroyModelMixin, generics.GenericAPIView, mixins.CreateModelMixin):
+    queryset = model.objects.all()
+    serializer_class = AppointmentLogSerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
     lookup_field = '_id'
 
     def post_or_put(self, request, *args, **kwargs):
-        user_exists = False
         request.data['_id'] = self.kwargs['_id']
         try:
-            user_instance = Department.objects.get(_id=self.kwargs['_id'])
-            user_exists = True
-        except Department.DoesNotExist:
-            user_exists = False
-
-        print (user_exists)
-
-        if user_exists:
+            model.objects.get(_id=self.kwargs['_id'])
             return self.update(request, *args, **kwargs)
-        else:
+        except model.DoesNotExist:
             return self.create(request, *args, **kwargs)
 
     def get(self, request, *args, **kwargs):
@@ -90,7 +81,7 @@ class DepartmentDetail(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixin
         if instance is None:
             return Response({'detail': 'Not Found'}, status=status.HTTP_404_NOT_FOUND)
         else:
-            serializer = DepartmentSerializer(instance)
+            serializer = AppointmentLogSerializer(instance)
             data = serializer.data
             row = nest_row(data)
             return Response(row)
@@ -107,4 +98,9 @@ class DepartmentDetail(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixin
 def nest_row(row, id=None):
     if id is not None:
         row['_id'] = id
+    row['appointment'] = Utility.get_nested(Appointments, AppointmentSerializer, row['appointment'])
+    print(type(row['appointment']), len(row['appointment']))
+    if len(row['appointment']) > 0:
+        row['appointment']['host'] = Utility.get_nested(UserProfile, UserSerializer, row['appointment']['host'])
+        row['appointment']['visitor'] = Utility.get_nested(Visitors, VisitorSerializer, row['appointment']['visitor'])
     return row
