@@ -8,16 +8,16 @@ model = Changes
 FILTER_FIELDS = [
     '_id',
     '_rev',
-    'name',
-    'address',
-    'created',
-    'modified',
-    'created_by',
-    'modified_by'
+    'model',
+    'type',
+    'snapshot',
+    'row_id',
+    'created'
 ]
 SEARCH_FIELDS = [
-    'name',
-    'address'
+    'model',
+    'type',
+    'row_id'
 ]
 
 class ChangesSerializer(serializers.ModelSerializer):
@@ -27,12 +27,11 @@ class ChangesSerializer(serializers.ModelSerializer):
         fields = (
             '_id',
             '_rev',
-            'name',
-            'address',
+            'model',
+            'type',
+            'row_id',
+            'snapshot',
             'created',
-            'modified',
-            'created_by',
-            'modified_by'
         )
 
 
@@ -40,7 +39,7 @@ class ChangesList(generics.ListAPIView):
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
 
     def get(self, request, **kwargs):
-        model_data = PaginationBuilder().get_paged_data(model, request, FILTER_FIELDS, SEARCH_FIELDS)
+        model_data = PaginationBuilder().get_paged_data(model, request, FILTER_FIELDS, SEARCH_FIELDS, '-created', extra_filters)
 
         row_list = []
         data = json.loads(dj_serializer.serialize("json", model_data['model_list']))
@@ -93,3 +92,22 @@ def nest_row(row, id=None):
     if id is not None:
         row['_id'] = id
     return row
+
+def extra_filters(request, list):
+
+    if 'load' in request.query_params:
+        load = request.query_params.get('load')
+
+        def updates():
+            last_checked = request.query_params.get('last-checked')
+            from datetime import datetime
+            start_time = datetime.fromtimestamp(float(last_checked) / 1e3)
+            data_model = request.query_params.get('model')
+            return Changes.objects.filter(
+                created__gt=start_time,
+                model=data_model
+            )
+
+        if load == 'changes':
+            return  updates()
+    return list

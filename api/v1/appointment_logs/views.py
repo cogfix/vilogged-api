@@ -7,13 +7,12 @@ from core.models import Appointments, AppointmentLogs, UserProfile, Visitors
 from api.v1.appointments.views import AppointmentSerializer
 from api.v1.user.views import UserSerializer
 from api.v1.visitor.views import VisitorSerializer
+from datetime import datetime, date
 model = AppointmentLogs
 FILTER_FIELDS = [
     '_id',
     '_rev',
     'appointment',
-    'appointment__is_approved',
-    'appointment__is_expired',
     'checked_in',
     'checked_out',
     'label_code',
@@ -46,7 +45,7 @@ class AppointmentLogList(generics.ListAPIView):
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
 
     def get(self, request, **kwargs):
-        model_data = PaginationBuilder().get_paged_data(model, request, FILTER_FIELDS, SEARCH_FIELDS)
+        model_data = PaginationBuilder().get_paged_data(model, request, FILTER_FIELDS, SEARCH_FIELDS, '-created', extra_filters)
 
         row_list = []
         data = json.loads(dj_serializer.serialize("json", model_data['model_list']))
@@ -98,9 +97,20 @@ class AppointmentLogDetail(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, m
 def nest_row(row, id=None):
     if id is not None:
         row['_id'] = id
-    row['appointment'] = Utility.get_nested(Appointments, AppointmentSerializer, row['appointment'])
-    print(type(row['appointment']), len(row['appointment']))
-    if len(row['appointment']) > 0:
-        row['appointment']['host'] = Utility.get_nested(UserProfile, UserSerializer, row['appointment']['host'])
-        row['appointment']['visitor'] = Utility.get_nested(Visitors, VisitorSerializer, row['appointment']['visitor'])
+    appointment = Utility.get_nested(Appointments, AppointmentSerializer, row['appointment'])
+    # print(type(row['appointment']), len(row['appointment']))
+    if len(appointment) > 0:
+        appointment['host'] = Utility.get_nested(UserProfile, UserSerializer, appointment['host'])
+        appointment['visitor'] = Utility.get_nested(Visitors, VisitorSerializer, appointment['visitor'])
+        del appointment['visitor']['image']
+        del appointment['host']['image']
+        appointment['log'] = row
+        row = appointment
     return row
+
+def extra_filters(request, list):
+
+    if 'load' in request.query_params:
+        load = request.query_params.get('load')
+
+    return list

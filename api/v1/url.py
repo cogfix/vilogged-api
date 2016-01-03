@@ -1,7 +1,7 @@
 from django.conf.urls import patterns, include, url
 
 
-urlpatterns = patterns('',
+urlpatterns = [
     url(r'^user/?', include('api.v1.user.url')),
     url(r'^visitor/?', include('api.v1.visitor.url')),
     url(r'^appointment/?', include('api.v1.appointments.url')),
@@ -15,4 +15,4 @@ urlpatterns = patterns('',
     url(r'^settings/?', include('api.v1.settings.url')),
     url(r'^_changes/?', include('api.v1.changes.url')),
     url(r'^vehicle/?', include('api.v1.vehicle.url')),
-)
+]

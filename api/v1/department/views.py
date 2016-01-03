@@ -11,15 +11,14 @@ FILTER_FIELDS = [
     '_rev',
     'name',
     'floor',
+    'created',
     'modified',
-    'created_by__name',
-    'modified_by__name'
+    'created_by',
+    'modified_by'
 ]
 SEARCH_FIELDS = [
     'name',
-    'floor',
-    'created_by__name',
-    'modified_by__name'
+    'floor'
 ]
 
 class DepartmentSerializer(serializers.ModelSerializer):
@@ -39,7 +38,6 @@ class DepartmentSerializer(serializers.ModelSerializer):
             'created_by',
             'modified_by'
         )
-        filter_fields = ('is_approved', 'is_expired', 'checked_in', 'checked_out', 'label_code', 'start_date')
 
 
 
@@ -70,7 +68,6 @@ class DepartmentDetail(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixin
     lookup_field = '_id'
 
     def post_or_put(self, request, *args, **kwargs):
-        user_exists = False
         request.data['_id'] = self.kwargs['_id']
         try:
             user_instance = Department.objects.get(_id=self.kwargs['_id'])

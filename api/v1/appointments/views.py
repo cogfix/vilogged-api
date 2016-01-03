@@ -1,5 +1,5 @@
-from core.models import Appointments, Visitors, VisitorGroup, Company, Entrance
-from core.models import UserProfile, Department
+from core.models import Appointments, Visitors, VisitorGroup, Company, Entrance, UserProfile, Department
+from core.models import AppointmentLogs
 from rest_framework import serializers, generics, mixins, status, permissions
 from django.core import serializers as dj_serializer
 from rest_framework.response import Response
@@ -11,6 +11,7 @@ from api.v1.visitor.views import VisitorSerializer
 from api.v1.user.views import UserSerializer
 from api.v1.entrance.views import EntranceSerializer
 import json
+from datetime import datetime, date
 model = Appointments
 
 FILTER_FIELDS = [
@@ -34,6 +35,7 @@ FILTER_FIELDS = [
     'created_by__name',
     'modified_by__name'
 ]
+
 SEARCH_FIELDS = [
     'visitor',
     'host',
@@ -84,7 +86,7 @@ class AppointmentList(generics.ListAPIView):
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
 
     def get(self, request, **kwargs):
-        model_data = PaginationBuilder().get_paged_data(model, request, FILTER_FIELDS, SEARCH_FIELDS)
+        model_data = PaginationBuilder().get_paged_data(model, request, FILTER_FIELDS, SEARCH_FIELDS, '-created', extra_filters)
 
         row_list = []
         data = json.loads(dj_serializer.serialize("json", model_data['model_list']))
@@ -107,7 +109,6 @@ class AppointmentDetail(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixi
     lookup_field = '_id'
 
     def post_or_put(self, request, *args, **kwargs):
-        instance_exists = False
         request.data['_id'] = self.kwargs['_id']
         request.data['entrance'] = Utility.return_id(Entrance, request.data.get('entrance'), 'name')
         try:
@@ -152,6 +153,7 @@ def nest_row(row, id=None):
             del host['image']
     row['visitor'] = visitor
     row['host'] = host
+    row['status'] = Appointments().get_status(row)
     row['entrance'] = Utility.get_nested(Entrance, EntranceSerializer, row['entrance'])
     if type(row['visitor']) is dict and len(row['visitor']) > 0:
         row['visitor']['company'] = Utility.get_nested(Company, CompanySerializer, row['visitor']['company'])
@@ -161,3 +163,65 @@ def nest_row(row, id=None):
         row['host']['department'] = Utility.get_nested(Department, DepartmentSerializer, row['host']['department'])
 
     return row
+
+def extra_filters(request, list):
+    from django.db.models import Q
+    if 'load' in request.query_params:
+        load = request.query_params.get('load')
+        def in_progress():
+            today = date.today()
+            checked_in = AppointmentLogs.objects.filter(
+                checked_in__year=today.year,
+                checked_in__month=today.month,
+                checked_in__day=today.day,
+                checked_out=None
+            ).values_list('_id', flat=True)
+            query = dict(_id__in=checked_in)
+            if request.query_params.get('host', None) is not None:
+                query['host'] = request.query_params['host']
+            return Appointments.objects.filter(**query)
+
+        def upcoming():
+            today = date.today()
+            query = [
+                Q(start_date__gte=today) | Q(start_date__lte=today),
+                Q(end_date__gte=today),
+                Q(is_expired=False),
+                Q(is_approved=True)
+            ]
+            if request.query_params.get('host', None) is not None:
+                query.append(Q(host=request.query_params['host']))
+            return Appointments.objects.filter(*query)
+
+        def awaiting():
+            today = date.today()
+            query = [
+                Q(start_date__gte=today) | Q(start_date__lte=today),
+                Q(end_date__gte=today),
+                Q(is_expired=False),
+                Q(is_approved=None)
+            ]
+            if request.query_params.get('host', None) is not None:
+                query.append(Q(host=request.query_params['host']))
+            return Appointments.objects.filter(*query)
+
+        def rejected():
+            today = date.today()
+            query = dict(
+                is_approved=False,
+                end_date__gt=today
+            )
+            if request.query_params.get('host', None) is not None:
+                query['host'] = request.query_params['host']
+            return Appointments.objects.filter(**query)
+
+        if load == 'upcoming':
+            return  upcoming()
+        if load == 'pending':
+            return awaiting()
+        if load == 'rejected':
+            return rejected()
+        if load == 'in-progress':
+            return  in_progress()
+
+    return list

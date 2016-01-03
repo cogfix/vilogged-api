@@ -1,10 +1,14 @@
+CherryPy
+Django
 django-braces
-git+git://github.com/ottoyiu/django-cors-headers.git
+django-cors-headers
 django-extensions
 django-filter
 django-uuidfield
 djangorestframework
 djoser
 httplib2
+pytz
 simplejson
 six
+wheel

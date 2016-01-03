@@ -3,11 +3,13 @@ from rest_framework.authtoken.models import Token
 from django.db.models.signals import post_save, pre_save, post_delete
 from django.dispatch import receiver
 import uuid
-from datetime import date
+from datetime import date, datetime
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
 from django.utils.translation import ugettext_lazy as _
 from django.db.models import Lookup
+import json
+import time
 
 list_of_models = (
     'UserProfile',
@@ -55,6 +57,10 @@ class Department(models.Model):
     def __unicode__(self):
         return '{}'.format(self.name)
 
+    @classmethod
+    def model_fields(cls):
+        return ['name', 'floor', 'description']
+
 
 class UserProfile(AbstractUser, models.Model):
     _id = models.CharField(max_length=100,  unique=True,  primary_key=True)
@@ -73,9 +79,9 @@ class UserProfile(AbstractUser, models.Model):
     def __unicode__(self):
         return '{}'.format(self.username)
 
-    def clean(self):
-        if self.first_name is None:
-            raise ValidationError(_('Draft entries may not have a publication date.'))
+    @classmethod
+    def model_fields(cls):
+        return ['first_name', 'last_name', 'description']
 
 
 class Entrance(models.Model):
@@ -161,6 +167,12 @@ class Visitors(models.Model):
 
 
 class Appointments(models.Model):
+    REJECTED = 0
+    UPCOMING = 1
+    PENDING = 2
+    EXPIRED = 3
+    IN_PROGRESS = 4
+
     _id = models.CharField(max_length=100, unique=True, primary_key=True)
     _rev = models.CharField(max_length=100,  unique=True, editable=False)
     visitor = models.ForeignKey(Visitors, related_name="visitor")
@@ -180,6 +192,36 @@ class Appointments(models.Model):
     modified = models.DateTimeField(auto_now=True)
     created_by = models.ForeignKey(UserProfile, blank=True, null=True, related_name='app_created_by')
     modified_by = models.ForeignKey(UserProfile, blank=True, null=True, related_name='app_modified_by')
+
+    def get_status (self, item):
+        today = date.today()
+        if item['is_expired']:
+            return self.EXPIRED
+        if item['is_approved'] and today <= item['start_date']:
+            activities = AppointmentLogs.objects.filter(
+                    appointment=item['_id'],
+                    checked_out=None,
+                    checked_in__year=today.year,
+                    checked_in__month=today.month,
+                    checked_in__day=today.day,
+            )
+            if len(activities) > 0:
+                return self.IN_PROGRESS
+            return self.UPCOMING
+        if item['is_approved'] is False:
+            return self.REJECTED
+        if item['is_approved'] is None:
+            return self.PENDING
+
+    def set_expired(self):
+
+        active_appointment = Appointments.objects.filter(is_expired=False)
+        if len(active_appointment) > 0:
+            today = date.today()
+            for appointment in active_appointment:
+                if today > appointment.end_time:
+                    appointment.is_expired = True
+                    appointment.save()
 
 
 class Vehicles(models.Model):
@@ -223,10 +265,11 @@ class RestrictedItems(models.Model):
     created_by = models.ForeignKey(UserProfile, blank=True, null=True, related_name='re_created_by')
     modified_by = models.ForeignKey(UserProfile, blank=True, null=True, related_name='re_modified_by')
 
+
 class AppointmentLogs(models.Model):
     _id = models.CharField(max_length=100, unique=True, primary_key=True)
     _rev = models.CharField(max_length=100,  unique=True, editable=False)
-    appointment = models.ForeignKey(Appointments)
+    appointment = models.CharField(Appointments, max_length=50, blank=True, null=True)
     checked_in = models.DateTimeField(default=None, blank=True, null=True)
     checked_out = models.DateTimeField(blank=True, null=True)
     label_code = models.CharField(max_length=50, null=True, blank=True)
@@ -242,11 +285,42 @@ class Changes(models.Model):
     model = models.CharField(max_length=20)
     type = models.CharField(max_length=20)
     row_id = models.CharField(max_length=20)
+    rev = models.CharField(max_length=100, blank=True, null=True)
+    snapshot = models.TextField(blank=True, null=True)
+    reviewed = models.BooleanField(default=False)
     created = models.DateTimeField(auto_now_add=True)
 
 
 @receiver(pre_save)
 def update_id(sender, instance=None, **kwargs):
+    def save_snapshot(sender, instance, **kwargs):
+        def get_value(data, field):
+            from django.db.models.fields.related import ForeignKey
+            if isinstance(field, ForeignKey) and data:
+                return getattr(data, '_id', 'no id')
+            elif data is not None:
+                return data
+            else:
+                return ''
+        if getattr(instance, '_id', None) is not None:
+            changed = dict()
+            current_record = sender.objects.filter(_id=instance._id)
+            if len(current_record) > 0:
+                current_record = current_record.first()
+                fields = instance._meta.get_fields()
+                for field in fields:
+                    if field.name not in ['modified_by', 'created_by', '_rev', 'logentry', 'password']:
+                        try:
+                            current_value = getattr(current_record, field.name)
+                            instance_value = getattr(instance, field.name)
+                            if current_value != instance_value:
+                                changed[field.name] = get_value(current_value, field)
+                        except:
+                            pass
+            if len(changed) > 0:
+                model = sender.__name__.lower()
+                Changes.objects.create(model=model, type='updated', row_id=instance._id, snapshot=json.dumps(changed))
+
 
     if sender.__name__ in list_of_models: # this is the dynamic
         if instance._id is None or instance._id == '':
@@ -260,6 +334,8 @@ def update_id(sender, instance=None, **kwargs):
             count = int(count[0]) + 1
             new_rev = '{}'.format(uuid.uuid4()).replace('-', '')
             instance._rev = '{0}-{1}'.format(count, new_rev)
+    if sender.__name__ in list_of_models and sender.__name__ != 'Changes':
+        save_snapshot(sender, instance, **kwargs)
 
 
 @receiver(post_save)
@@ -272,16 +348,23 @@ def manage_post(sender, instance=None, created=False, **kwargs):
         except:
             pass
 
-    try:
-        model = sender.__name__.lower()
-        if created:
-            type = 'created'
+    model = sender.__name__.lower()
+    if model != 'changes' and sender.__name__ in list_of_models:
+
+        pre_saved = Changes.objects.filter(reviewed=False, model=model, row_id=instance._id)
+        if len(pre_saved) > 0:
+            pre_saved = pre_saved.first()
+            pre_saved.reviewed = True
+            pre_saved.save()
         else:
-            type = 'updated'
-        if model != 'changes' and sender.__name__ in list_of_models:
-            Changes.objects.create(model=model, type=type, row_id=instance._id)
-    except:
-        pass
+            if created:
+                type = 'created'
+                snapshot = serialize_model_instance(instance)
+            else:
+                type = 'updated'
+                snapshot = dict()
+            Changes.objects.create(model=model, type=type, row_id=instance._id, reviewed=True, rev=instance._rev, snapshot=json.dumps(snapshot))
+
 @receiver(post_delete)
 def manage_delete(sender, instance=None, using=None, **kwargs):
 
@@ -290,6 +373,29 @@ def manage_delete(sender, instance=None, using=None, **kwargs):
         model = sender.__name__.lower()
         type = 'delete'
         if model != 'changes' and sender.__name__ in list_of_models:
-            Changes.objects.create(model=model, type=type, row_id=instance._id)
+            snapshot = json.dumps(serialize_model_instance(instance))
+            Changes.objects.create(model=model, type=type, row_id=instance._id, snapshot=snapshot, rev=instance._rev)
     except:
         pass
+
+
+
+def serialize_model_instance(instance):
+    def get_value(data, field):
+        from django.db.models.fields.related import ForeignKey
+        if isinstance(field, ForeignKey) and data:
+            return getattr(data, '_id', 'no id')
+        elif data is not None:
+            return data
+        else:
+            return ''
+    fields = instance._meta.get_fields()
+    serialized_instance = dict()
+    for field in fields:
+        if field.name not in ['logentry', 'password']:
+            try:
+                instance_value = getattr(instance, field.name)
+                serialized_instance[field.name] = str(get_value(instance_value, field))
+            except AttributeError:
+                pass
+    return serialized_instance
