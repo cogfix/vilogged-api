@@ -85,11 +85,11 @@ class Utility(object):
         return id
 
     @staticmethod
-    def get_nested(instance, instance_serializer, field):
+    def get_nested(instance, instance_serializer, id):
         _instance = {}
-        if field is not None:
+        if id is not None:
             try:
-                _instance = instance.objects.get(_id=field)
+                _instance = instance.objects.get(_id=id)
                 _instance = instance_serializer(_instance).data
             except instance.DoesNotExist:
                 pass
@@ -189,10 +189,18 @@ class Utility(object):
             instance = model.objects.model._meta.get_field(key)
             if formatted is not None:
                 if isinstance(instance, (DateTimeField)):
+
                     try:
-                        formatted = datetime.strptime(value, '%Y-%m-%dT%H:%M:%S.%fZ')
+                        timestamp = datetime.fromtimestamp(float(value) / 1e3)
+                        formatted = timestamp
                     except ValueError:
-                        formatted = datetime.strptime(value, '%Y-%m-%d').date()
+                        timestamp = None
+                        pass
+                    if timestamp is None:
+                        try:
+                            formatted = datetime.strptime(value, '%Y-%m-%dT%H:%M:%S.%fZ')
+                        except ValueError:
+                            formatted = datetime.strptime(value, '%Y-%m-%d').date()
                 if isinstance(instance, (TimeField)):
                     formatted = datetime.strptime(value, '%H:%M:%S').time()
 
@@ -208,7 +216,7 @@ class Utility(object):
     @staticmethod
     def get_fk_model(model, fieldname):
         '''returns None if not foreignkey, otherswise the relevant model'''
-        field_object, model, direct, m2m = model._meta.get_field_by_name(fieldname)
+        field_object, model, direct, m2m = model._meta.get_field(fieldname)
         if not m2m and direct and isinstance(field_object, ForeignKey):
             return field_object.rel.to
         return None
@@ -225,12 +233,15 @@ class Utility(object):
 
 class PaginationBuilder(object):
 
-    def get_paged_data(self, model, request, filter_fields, search_fields, def_order_by='-created'):
+    def get_paged_data(self, model, request, filter_fields, search_fields, def_order_by='-created', extra_filters=None):
         query = Utility.build_filter(filter_fields, request.query_params, model)
         order_by = request.query_params.get('order_by', def_order_by)
         _model_list = model.objects.filter(**query).order_by(order_by)
+        #print (model.objects.filter(**query).order_by(order_by).query.sql_with_params())
         if ('q' in request.query_params) and request.query_params['q'].strip():
             _model_list = Utility.build_query(model, request, order_by, search_fields)
+        if extra_filters is not None:
+            _model_list = extra_filters(request, _model_list)
         limit = int(request.query_params.get('limit', 10))
         next = None
         prev = None
@@ -266,6 +277,7 @@ class PaginationBuilder(object):
         }
 
 class Cron(object):
+    in_progress = False
 
     def set_interval(self, func, sec):
         def func_wrapper():

@@ -109,9 +109,9 @@ LANGUAGE_CODE = 'en-us'
 
 TIME_ZONE = 'Africa/Lagos'
 
-USE_I18N = True
+#USE_I18N = True
 
-USE_L10N = True
+#USE_L10N = True
 
 USE_TZ = True
 
@@ -195,3 +195,11 @@ CORS_ORIGIN_ALLOW_ALL = True
 APPEND_SLASH = False
 
 SESSION_SERIALIZER = 'django.contrib.sessions.serializers.PickleSerializer'
+
+from utility.utility import Cron
+
+def run_cron():
+    from core.models import Appointments
+    return Appointments().set_expired()
+
+#Cron().set_interval(run_cron, 3)
