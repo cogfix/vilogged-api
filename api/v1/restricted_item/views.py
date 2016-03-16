@@ -3,7 +3,7 @@ from django.core import serializers as dj_serializer
 from utility.utility import Utility, PaginationBuilder
 from rest_framework.response import Response
 import json
-from core.models import RestrictedItems
+from vilogged.models import RestrictedItems
 
 model = RestrictedItems
 

@@ -8,7 +8,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('core', '0006_auto_20151229_1851'),
+        ('vilogged', '0006_auto_20151229_1851'),
     ]
 
     operations = [
@@ -19,6 +19,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='appointmentlogs',
             name='appointment',
-            field=models.ManyToManyField(to='core.Appointments'),
+            field=models.ManyToManyField(to='vilogged.Appointments'),
         ),
     ]

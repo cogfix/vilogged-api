@@ -1,13 +1,14 @@
-from rest_framework import serializers, generics, mixins, status, permissions
+from rest_framework import serializers, generics, mixins, status, permissions, views
 from rest_framework.response import Response
 from utility.utility import Utility, PaginationBuilder
 from django.core import serializers as dj_serializer
 import json
-from core.models import Appointments, AppointmentLogs, UserProfile, Visitors
+from vilogged.users.models import UserProfile
+from vilogged.appointments.models import Appointments, AppointmentLogs
 from api.v1.appointments.views import AppointmentSerializer
 from api.v1.user.views import UserSerializer
 from api.v1.visitor.views import VisitorSerializer
-from datetime import datetime, date
+
 model = AppointmentLogs
 FILTER_FIELDS = [
     '_id',
@@ -23,6 +24,7 @@ FILTER_FIELDS = [
 SEARCH_FIELDS = [
     'label_code'
 ]
+
 
 class AppointmentLogSerializer(serializers.ModelSerializer):
 
@@ -41,21 +43,14 @@ class AppointmentLogSerializer(serializers.ModelSerializer):
         )
 
 
-class AppointmentLogList(generics.ListAPIView):
+class AppointmentLogList(views.APIView):
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
 
     def get(self, request, **kwargs):
         model_data = PaginationBuilder().get_paged_data(model, request, FILTER_FIELDS, SEARCH_FIELDS, '-created', extra_filters)
-
-        row_list = []
-        data = json.loads(dj_serializer.serialize("json", model_data['model_list']))
-        for obj in data:
-            row = obj['fields']
-            row = nest_row(row, obj['pk'])
-            row_list.append(row)
         return Response({
             'count': model_data['count'],
-            'results': row_list,
+            'results': [obj.to_json() for obj in model_data['model_list']],
             'next': model_data['next'],
             'prev': model_data['prev']
         })

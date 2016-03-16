@@ -1,7 +1,8 @@
 from rest_framework import serializers, generics, mixins, status, permissions
 from django.core import serializers as dj_serializer
 from rest_framework.response import Response
-from core.models import Visitors, VisitorGroup, Company
+from vilogged.company.models import Company
+from vilogged.visitors.models import Visitors, VisitorGroup
 from utility.utility import Utility, PaginationBuilder
 from api.v1.company.views import CompanySerializer
 from api.v1.visitor_group.views import VisitorGroupSerializer

@@ -1,9 +1,9 @@
-from rest_framework import serializers, generics, mixins, status, permissions
+from rest_framework import serializers, generics, mixins, status, permissions, views
 from rest_framework.response import Response
 from utility.utility import Utility, PaginationBuilder
 from django.core import serializers as dj_serializer
 import json
-from core.models import Company
+from vilogged.company.models import Company
 model = Company
 FILTER_FIELDS = [
     '_id',
@@ -36,7 +36,7 @@ class CompanySerializer(serializers.ModelSerializer):
         )
 
 
-class CompanyList(generics.ListAPIView):
+class CompanyList(views.APIView):
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
 
     def get(self, request, **kwargs):

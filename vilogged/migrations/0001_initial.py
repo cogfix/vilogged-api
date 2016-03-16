@@ -154,7 +154,7 @@ class Migration(migrations.Migration):
                 ('code', models.CharField(max_length=50)),
                 ('created', models.DateTimeField(auto_now_add=True)),
                 ('modified', models.DateTimeField(auto_now=True)),
-                ('appointment_id', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='restricted_items', to='core.Appointments')),
+                ('appointment_id', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='restricted_items', to='vilogged.Appointments')),
                 ('created_by', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='re_created_by', to=settings.AUTH_USER_MODEL)),
                 ('modified_by', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='re_modified_by', to=settings.AUTH_USER_MODEL)),
             ],
@@ -170,7 +170,7 @@ class Migration(migrations.Migration):
                 ('color', models.CharField(blank=True, max_length=20, null=True)),
                 ('created', models.DateTimeField(auto_now_add=True)),
                 ('modified', models.DateTimeField(auto_now=True)),
-                ('appointment_id', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='vehicle', to='core.Appointments')),
+                ('appointment_id', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='vehicle', to='vilogged.Appointments')),
                 ('created_by', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='ve_created_by', to=settings.AUTH_USER_MODEL)),
                 ('modified_by', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='ve_modified_by', to=settings.AUTH_USER_MODEL)),
             ],
@@ -210,16 +210,16 @@ class Migration(migrations.Migration):
                 ('pass_code', models.CharField(blank=True, max_length=50, null=True)),
                 ('created', models.DateTimeField(auto_now_add=True)),
                 ('modified', models.DateTimeField(auto_now=True)),
-                ('company', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='core.Company')),
+                ('company', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='vilogged.Company')),
                 ('created_by', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='created_by', to=settings.AUTH_USER_MODEL)),
-                ('group', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='group', to='core.VisitorGroup')),
+                ('group', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='group', to='vilogged.VisitorGroup')),
                 ('modified_by', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='modified_by', to=settings.AUTH_USER_MODEL)),
             ],
         ),
         migrations.AddField(
             model_name='appointments',
             name='entrance',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='entrance', to='core.Entrance'),
+            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='entrance', to='vilogged.Entrance'),
         ),
         migrations.AddField(
             model_name='appointments',
@@ -234,12 +234,12 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='appointments',
             name='visitor',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='visitor', to='core.Visitors'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='visitor', to='vilogged.Visitors'),
         ),
         migrations.AddField(
             model_name='appointmentlogs',
             name='appointment',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='core.Appointments'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='vilogged.Appointments'),
         ),
         migrations.AddField(
             model_name='appointmentlogs',
@@ -254,7 +254,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='userprofile',
             name='department',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='core.Department'),
+            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='vilogged.Department'),
         ),
         migrations.AddField(
             model_name='userprofile',

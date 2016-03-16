@@ -1,6 +1,10 @@
-from core.models import Appointments, Visitors, VisitorGroup, Company, Entrance, UserProfile, Department
-from core.models import AppointmentLogs
-from rest_framework import serializers, generics, mixins, status, permissions
+from vilogged.appointments.models import Appointments, AppointmentLogs
+from vilogged.department.models import Department
+from vilogged.company.models import Company
+from vilogged.users.models import UserProfile
+from vilogged.entrance.models import Entrance
+from vilogged.visitors.models import Visitors, VisitorGroup
+from rest_framework import serializers, generics, mixins, status, permissions, views
 from django.core import serializers as dj_serializer
 from rest_framework.response import Response
 from utility.utility import Utility, PaginationBuilder
@@ -52,10 +56,8 @@ SEARCH_FIELDS = [
     'entrance'
 ]
 
-class AppointmentSerializer(serializers.ModelSerializer):
 
-    def validate(self, data):
-        return data
+class AppointmentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Appointments
@@ -82,18 +84,16 @@ class AppointmentSerializer(serializers.ModelSerializer):
         )
 
 
-class AppointmentList(generics.ListAPIView):
+class AppointmentList(views.APIView):
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
 
     def get(self, request, **kwargs):
         model_data = PaginationBuilder().get_paged_data(model, request, FILTER_FIELDS, SEARCH_FIELDS, '-created', extra_filters)
 
         row_list = []
-        data = json.loads(dj_serializer.serialize("json", model_data['model_list']))
-        for obj in data:
-            row = obj['fields']
-            row = nest_row(row, obj['pk'])
-            row_list.append(row)
+        for obj in model_data['model_list']:
+
+            row_list.append(obj.to_json())
         return Response({
             'count': model_data['count'],
             'results': row_list,
@@ -127,10 +127,7 @@ class AppointmentDetail(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixi
         if instance is None:
             return Response({'detail': 'Not Found'}, status=status.HTTP_404_NOT_FOUND)
         else:
-            serializer = AppointmentSerializer(instance)
-            row = serializer.data
-            row = nest_row(row)
-            return Response(row)
+            return Response(instance.to_json(True))
 
     def put(self, request, *args, **kwargs):
         return self.post_or_put(request, *args, **kwargs)
@@ -163,6 +160,7 @@ def nest_row(row, id=None):
         row['host']['department'] = Utility.get_nested(Department, DepartmentSerializer, row['host']['department'])
 
     return row
+
 
 def extra_filters(request, list):
     from django.db.models import Q

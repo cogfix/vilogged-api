@@ -2,7 +2,7 @@ from rest_framework import serializers, generics, mixins, views, status, permiss
 from rest_framework.response import Response
 from utility.utility import Utility
 from django.core import serializers as dj_serializer
-from core.config_manager import ConfigManager
+from vilogged.config_manager import ConfigManager
 import json
 
 class ConfigManagerView(views.APIView):

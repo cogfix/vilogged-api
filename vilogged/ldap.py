@@ -1,5 +1,6 @@
-from core.config_manager import ConfigManager
-from core.models import UserProfile, Department
+from vilogged.config_manager import ConfigManager
+from vilogged.department.models import Department
+from vilogged.users.models import UserProfile
 import ldap
 
 

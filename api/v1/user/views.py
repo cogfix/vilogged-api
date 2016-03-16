@@ -5,10 +5,10 @@ from django.contrib.auth.hashers import make_password
 from utility.utility import Utility, PaginationBuilder
 from django.contrib.auth import authenticate
 from rest_framework.authtoken.models import Token
-from core.config_manager import ConfigManager
-from core.ldap import LDAPManager
-import json
-from core.models import UserProfile, Department
+from vilogged.config_manager import ConfigManager
+from vilogged.ldap import LDAPManager
+from vilogged.department.models import Department
+from vilogged.users.models import UserProfile
 from api.v1.department.views import DepartmentSerializer
 
 model = UserProfile
@@ -43,6 +43,8 @@ SEARCH_FIELDS = [
     'first_name',
     'last_name',
 ]
+
+
 class UserSerializer(serializers.ModelSerializer):
     email = serializers.EmailField()
     first_name = serializers.CharField()
@@ -77,18 +79,15 @@ class UserSerializer(serializers.ModelSerializer):
 
 model_serializer = UserSerializer
 
+
 class UserList(views.APIView):
 
     def get(self, request, **kwargs):
         model_data = PaginationBuilder().get_paged_data(model, request, FILTER_FIELDS, SEARCH_FIELDS, '-date_joined')
 
         row_list = []
-        data = json.loads(dj_serializer.serialize("json", model_data['model_list']))
-        for obj in data:
-            row = obj['fields']
-            del obj['fields']['password']
-            row = nest_row(row, obj['pk'])
-            row_list.append(row)
+        for obj in model_data['model_list']:
+            row_list.append(obj.to_json())
         return Response({
             'count': model_data['count'],
             'results': row_list,
@@ -118,18 +117,12 @@ class UserDetail(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.Dest
                 request.data['password'] = make_password(request.data['password'])
             return self.create(request, *args, **kwargs)
 
-
-
     def get(self, request, *args, **kwargs):
         user = Utility.get_data_or_none(UserProfile, request, **kwargs)
         if user is None:
             return Response({'detail': 'Not Found'}, status=status.HTTP_404_NOT_FOUND)
         else:
-            serializer = UserSerializer(user)
-            data = serializer.data
-            del data['password']
-            row = nest_row(data)
-            return Response(row)
+            return Response(user.to_json())
 
     def put(self, request, *args, **kwargs):
         return self.post_or_put(request, *args, **kwargs)
@@ -139,13 +132,6 @@ class UserDetail(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.Dest
 
     def post(self, request, *args, **kwargs):
         return self.post_or_put(request, *args, **kwargs)
-
-def nest_row(row, id=None):
-    if id is not None:
-        row['_id'] = id
-    row['department'] = Utility.get_nested(Department, DepartmentSerializer, row['department'])
-
-    return row
 
 
 class AuthUser(views.APIView):
@@ -169,11 +155,8 @@ class AuthUser(views.APIView):
         if user is not None:
             if user.is_active:
                 token = Token.objects.get(user=user)
-                serializer = UserSerializer(user)
-                data = serializer.data
+                data = user.to_json(True)
                 del data['password']
-                data['department'] = Utility.get_nested(Department, DepartmentSerializer, data['department'])
-
                 return Response({'user': data, 'token': token.key})
             else:
                 return Response({'detail': 'User not active'}, status=status.HTTP_400_BAD_REQUEST)

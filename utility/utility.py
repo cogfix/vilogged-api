@@ -11,8 +11,38 @@ import threading
 from datetime import datetime
 from django.db.models.fields import DateField, DateTimeField, TimeField, CharField, IntegerField
 from django.db.models import ForeignKey
+from django.db import models
+from rest_framework.utils.encoders import JSONEncoder
+
+
+class ModelInstanceManager(models.Manager):
+    def to_json(self, all_fields=False):
+        query_set = super(ModelInstanceManager, self).get_queryset().all()
+        return [instance.to_json(all_fields) for instance in query_set]
+
 
 class Utility(object):
+
+    @classmethod
+    def return_instance_id(cls, instance):
+        id = None
+        if instance is not None:
+            if type(instance) in [unicode, str]:
+                id = instance
+            else:
+                id = instance._id
+        return id
+
+    @classmethod
+    def get_instance_fields(cls, instance, fields):
+        fields_data = dict()
+        if instance is not None:
+            if type(instance) in [unicode, str]:
+                fields_data = instance
+            else:
+                fields_data = {key: getattr(instance, key, None) for key in fields}
+        return fields_data
+
 
     @staticmethod
     def error_to_json(error):
@@ -231,9 +261,22 @@ class Utility(object):
             return None
         return value
 
+    @classmethod
+    def format_datetime(cls, date_time):
+        if date_time is None:
+            return None
+        representation = date_time.isoformat()
+        if isinstance(date_time, datetime) and date_time.microsecond:
+            representation = representation[:23] + representation[26:]
+        if isinstance(date_time, datetime) and representation.endswith('+00:00'):
+            representation = representation[:-6] + 'Z'
+        return representation
+
+
 class PaginationBuilder(object):
 
-    def get_paged_data(self, model, request, filter_fields, search_fields, def_order_by='-created', extra_filters=None):
+    @classmethod
+    def get_paged_data(cls, model, request, filter_fields, search_fields, def_order_by='-created', extra_filters=None):
         query = Utility.build_filter(filter_fields, request.query_params, model)
         order_by = request.query_params.get('order_by', def_order_by)
         _model_list = model.objects.filter(**query).order_by(order_by)
@@ -276,6 +319,7 @@ class PaginationBuilder(object):
             'prev': prev
         }
 
+
 class Cron(object):
     in_progress = False
 
@@ -286,3 +330,7 @@ class Cron(object):
         t = threading.Timer(sec, func_wrapper)
         t.start()
         return t
+
+
+def json_encoder(obj):
+    return JSONEncoder().default(obj)

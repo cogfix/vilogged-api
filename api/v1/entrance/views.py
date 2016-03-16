@@ -3,7 +3,7 @@ from django.core import serializers as dj_serializer
 from utility.utility import Utility, PaginationBuilder
 from rest_framework.response import Response
 import json
-from core.models import Entrance
+from vilogged.entrance.models import Entrance
 model = Entrance
 
 FILTER_FIELDS = [

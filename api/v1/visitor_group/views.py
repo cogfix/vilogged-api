@@ -1,7 +1,7 @@
 from rest_framework import serializers, generics, mixins, permissions, status
 from django.core import serializers as dj_serializer
 from rest_framework.response import Response
-from core.models import VisitorGroup
+from vilogged.visitors.models import VisitorGroup
 from utility.utility import Utility, PaginationBuilder
 import json
 

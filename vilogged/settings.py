@@ -17,7 +17,7 @@ import platform
 from config_manager import ConfigManager
 DB_CONFIG = ConfigManager().get_config('database')
 SYS_OS = platform.system()
-AUTH_USER_MODEL = 'core.UserProfile'
+AUTH_USER_MODEL = 'users.UserProfile'
 
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PROJECT_PARENT = os.path.dirname(PROJECT_ROOT)
@@ -51,7 +51,14 @@ INSTALLED_APPS = (
     'django_filters',
     'rest_framework.authtoken',
     'django_extensions',
-    'core',
+    'vilogged',
+    'vilogged.appointments',
+    'vilogged.company',
+    'vilogged.department',
+    'vilogged.entrance',
+    'vilogged.users',
+    'vilogged.vehicles',
+    'vilogged.visitors',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -64,12 +71,12 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.security.SecurityMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'core.middleware.DisableCSRF',
+    'vilogged.middleware.DisableCSRF',
     # Uncomment the next line for simple clickjacking protection:
     # 'django.middleware.clickjacking.XFrameOptionsMiddleware',
 )
 
-ROOT_URLCONF = 'core.urls'
+ROOT_URLCONF = 'vilogged.urls'
 
 TEMPLATES = [
     {
@@ -87,7 +94,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'core.wsgi.application'
+WSGI_APPLICATION = 'vilogged.wsgi.application'
 
 
 # Database
@@ -195,11 +202,3 @@ CORS_ORIGIN_ALLOW_ALL = True
 APPEND_SLASH = False
 
 SESSION_SERIALIZER = 'django.contrib.sessions.serializers.PickleSerializer'
-
-from utility.utility import Cron
-
-def run_cron():
-    from core.models import Appointments
-    return Appointments().set_expired()
-
-#Cron().set_interval(run_cron, 3)

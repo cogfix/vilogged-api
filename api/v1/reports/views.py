@@ -1,7 +1,7 @@
 from rest_framework import serializers, generics, mixins
 from django.contrib.auth.hashers import make_password
 from rest_framework import pagination
-from core.models import Visitors
+from vilogged.models import Visitors
 from api.permissions import *
 from api.serializer import *
 

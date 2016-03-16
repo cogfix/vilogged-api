@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from utility.utility import Utility, PaginationBuilder
 from django.core import serializers as dj_serializer
 import json
-from core.models import Vehicles
+from vilogged.vehicles.models import Vehicles
 model = Vehicles
 FILTER_FIELDS = [
     '_id',

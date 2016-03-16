@@ -5,3 +5,5 @@ config.json
 db.sqlite
 .idea
 core/static/*
+test.py
+test
