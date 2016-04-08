@@ -1,0 +1,13 @@
+viloggedapi:
+  build: .
+  environment:
+      RDS_HOSTNAME: "vilogged"
+      RDS_USERNAME: ""
+      RDS_PASSWORD: ""
+      RDS_PORT: ""
+      RDS_DB_NAME: "vilogged"
+      STATIC_DIR: "/var/www/static/"
+  command: start
+  ports:
+    - "5000:5000"
+    - "8000:8000"

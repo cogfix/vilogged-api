@@ -1,0 +1,8 @@
+vi-server.out.log
+env
+*.pyc
+config.json
+db.sqlite
+.idea
+core/static/*
+pre-codes
