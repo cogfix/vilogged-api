@@ -22,7 +22,7 @@ cache:
     - $HOME/.cache/pip
 
 install:
-  - pip install -r pip-deploy.txt
+  #- pip install -r pip-deploy.txt
 
 before_script:
   - fab stage prebuild
