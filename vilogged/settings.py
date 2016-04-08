@@ -126,7 +126,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.8/howto/static-files/
 
 
-STATIC_ROOT = ''
+STATIC_ROOT = '/var/www/static/'
 
 # URL prefix for static files.
 # Example: "http://example.com/static/", "http://static.example.com/"
