@@ -21,16 +21,9 @@ cache:
   directories:
     - $HOME/.cache/pip
 
-install:
-  #- pip install -r pip-deploy.txt
-
 before_script:
   #- fab stage prebuild
   #- docker-compose up -d db
   - docker-compose build viloggedapi
-
-script:
-  #- docker-compose run viloggedapi setuplocaldb
-
 after_success:
   ./scripts/travis_deploy.sh
