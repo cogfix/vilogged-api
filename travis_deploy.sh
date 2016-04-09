@@ -20,7 +20,8 @@ fi
 if [ $BRANCH = "master" -a $PR = "false" ]
 then
     docker login -e="$DOCKER_EMAIL" -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
-    docker tag -f $DOCKER_USERNAME/vilogged-server:$TAG
+    docker images
+    docker tag -f viloggedpyapi_viloggedapi $DOCKER_USERNAME/vilogged-server:$TAG
     docker push $DOCKER_USERNAME/vilogged-server:$TAG
 
 fi
