@@ -6,3 +6,5 @@ db.sqlite
 .idea
 core/static/*
 pre-codes
+cover
+.coverage
