@@ -1,0 +1,7 @@
+from django.conf.urls import patterns, include, url
+from vilogged.api.v1.department.views import *
+
+urlpatterns = [
+    url(r'^$', DepartmentList.as_view()),
+    url(r'^(?P<_id>\w+)/?$', DepartmentDetail.as_view()),
+]
