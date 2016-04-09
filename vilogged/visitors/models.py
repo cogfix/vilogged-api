@@ -83,7 +83,7 @@ class Visitors(models.Model):
             gender=self.gender,
             phone=self.phone,
             occupation=self.occupation,
-            company=self.company.to_json(),
+            company=self.get_company(),
             date_of_birth=Utility.format_datetime(self.date_of_birth),
             nationality=self.nationality,
             state_of_origin=self.state_of_origin,
@@ -110,3 +110,10 @@ class Visitors(models.Model):
         if self.group is not None:
             return self.group.to_json()
         return self.group
+
+    def get_company(self):
+
+        if self.company is not None:
+            return self.company.to_json()
+        return self.company
+
