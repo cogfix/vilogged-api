@@ -35,6 +35,9 @@ case "$1" in
     setupproddb )
         setup_prod_db
     ;;
+    test_coverage)
+      python manage.py test --verbosity=2 --noinput
+    ;;
     start )
         cd /code
         python manage.py collectstatic --noinput
