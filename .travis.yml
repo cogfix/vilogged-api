@@ -33,4 +33,4 @@ script:
   - docker-compose run viloggedapi test_coverage
 
 after_success:
-  ./scripts/travis_deploy.sh
+  ./travis_deploy.sh
