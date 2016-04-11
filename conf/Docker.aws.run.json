@@ -1,0 +1,14 @@
+{
+  "AWSEBDockerrunVersion": "1",
+  "Image": {
+    "Name": "musamusa/vilogged-server",
+    "Update": "true"
+  },
+  "Ports": [
+    {
+      "ContainerPort": "5000",
+      "hostPort": 80
+    }
+  ],
+  "Logging": "/var/log/nginx"
+}
