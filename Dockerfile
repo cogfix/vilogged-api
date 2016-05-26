@@ -12,6 +12,8 @@ RUN apt-get update -qq
 
 ADD conf/apt-packages.txt /tmp/apt-packages.txt
 RUN cat /tmp/apt-packages.txt | xargs apt-get --yes --force-yes install
+RUN apt-get install freetds-common freetds-bin tdsodbc unixodbc subversion -y
+RUN apt-get build-dep pyodbc -y
 
 ADD pip-freeze.txt /tmp/requirements.txt
 RUN pip install -r /tmp/requirements.txt
