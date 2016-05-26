@@ -19,7 +19,7 @@ class ConfigManager(object):
                 'baseDN': ''
             },
             'database': {
-                'name': 'db.sqlite',
+                'name': 'local_db/db.sqlite',
                 'host': 'localhost',
                 'user': '',
                 'password': '',
