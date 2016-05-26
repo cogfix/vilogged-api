@@ -128,6 +128,9 @@ class UserDetail(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.Dest
         return self.post_or_put(request, *args, **kwargs)
 
     def delete(self, request, *args, **kwargs):
+        id = self.kwargs.get('_id')
+        if request.user._id == id:
+            return Response({'detail': 'Operation not allowed'}, status=status.HTTP_400_BAD_REQUEST)
         return self.destroy(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
@@ -142,7 +145,6 @@ class AuthUser(views.APIView):
 
         config = ConfigManager().get_config()
         user = None
-        print ('here')
         username = request.data.get('username', None)
         password = request.data.get('password', None)
 

@@ -8,6 +8,7 @@ from vilogged.appointments.models import Appointments, AppointmentLogs
 from vilogged.users.models import UserProfile
 import json
 from utility.utility import Utility
+from django.db.models.fields import DateField, DateTimeField, TimeField
 
 list_of_models = (
     'UserProfile',
@@ -158,6 +159,8 @@ def update_id(sender, instance=None, **kwargs):
                 return getattr(data, '_id', 'no id')
             elif data is not None:
                 return data
+            elif isinstance(field, (DateTimeField, DateField, TimeField)):
+                return Utility.format_datetime(data)
             else:
                 return ''
         if getattr(instance, '_id', None) is not None:
@@ -172,12 +175,18 @@ def update_id(sender, instance=None, **kwargs):
                             current_value = getattr(current_record, field.name)
                             instance_value = getattr(instance, field.name)
                             if current_value != instance_value:
+                                if instance(field, DateField):
+                                    current_value = Utility.format_datetime(current_value)
                                 changed[field.name] = get_value(current_value, field)
                         except:
                             pass
+
             if len(changed) > 0:
                 model = sender.__name__.lower()
-                Changes.objects.create(model=model, type='updated', row_id=instance._id, snapshot=json.dumps(changed))
+                try:
+                    Changes.objects.create(model=model, type='updated', row_id=instance._id, snapshot=json.dumps(changed))
+                except Exception as e:
+                    print (changed)
 
 
     if sender.__name__ in list_of_models: # this is the dynamic

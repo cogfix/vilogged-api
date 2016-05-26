@@ -42,9 +42,10 @@ class Appointments(models.Model):
 
     def get_status (self, item):
         today = date.today()
+        item_date = datetime.strptime(item['start_date'] , '%Y-%m-%d').date()
         if item['is_expired']:
             return self.EXPIRED
-        if item['is_approved'] and today <= item['start_date']:
+        if item['is_approved'] and today <= item_date:
             activities = AppointmentLogs.objects.filter(
                     appointment=item['_id'],
                     checked_out=None,
@@ -65,11 +66,11 @@ class Appointments(models.Model):
         json_object = dict(
             _id=self._id,
             _rev=self._rev,
-            visitor=self.visitor.to_json(),
-            host=self.host.to_json(),
+            visitor=self.visitor.to_json(all_fields),
+            host=self.host.to_json(all_fields),
             representing=self.representing,
             purpose=self.purpose,
-            start_date=self.start_time.isoformat(),
+            start_date=self.start_date.isoformat(),
             end_date=self.end_date.isoformat(),
             start_time=self.start_time.isoformat(),
             end_time=self.end_time.isoformat(),

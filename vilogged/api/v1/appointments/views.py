@@ -92,8 +92,9 @@ class AppointmentList(views.APIView):
 
         row_list = []
         for obj in model_data['model_list']:
-
-            row_list.append(obj.to_json())
+            row = obj.to_json()
+            row['status'] = Appointments().get_status(row)
+            row_list.append(row)
         return Response({
             'count': model_data['count'],
             'results': row_list,
@@ -127,7 +128,9 @@ class AppointmentDetail(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixi
         if instance is None:
             return Response({'detail': 'Not Found'}, status=status.HTTP_404_NOT_FOUND)
         else:
-            return Response(instance.to_json(True))
+            row = instance.to_json(True)
+            row['status'] = Appointments().get_status(row)
+            return Response(row)
 
     def put(self, request, *args, **kwargs):
         return self.post_or_put(request, *args, **kwargs)

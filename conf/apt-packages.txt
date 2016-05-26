@@ -16,3 +16,10 @@ uwsgi-plugin-python
 npm
 nginx
 curl
+freetds-common
+freetds-bin
+tdsodbc
+unixodbc
+subversion
+build-dep
+pyodbc

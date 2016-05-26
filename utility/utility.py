@@ -263,7 +263,7 @@ class Utility(object):
 
     @classmethod
     def format_datetime(cls, date_time):
-        if date_time is None:
+        if not date_time:
             return None
         representation = date_time.isoformat()
         if isinstance(date_time, datetime) and date_time.microsecond:

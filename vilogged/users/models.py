@@ -29,6 +29,7 @@ class UserProfile(AbstractUser, models.Model):
         return self.department
 
     def get_department_or_object(self, all_fields):
+        print (self.department)
         department = dict()
         if self.department:
             department = self.department.to_json(all_fields)
