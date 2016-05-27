@@ -124,9 +124,9 @@ class RestrictedItems(models.Model):
 class Changes(models.Model):
     _id = models.CharField(max_length=100, unique=True, primary_key=True)
     _rev = models.CharField(max_length=100,  unique=True, editable=False)
-    model = models.CharField(max_length=20)
-    type = models.CharField(max_length=20)
-    row_id = models.CharField(max_length=20)
+    model = models.CharField(max_length=100)
+    type = models.CharField(max_length=100)
+    row_id = models.CharField(max_length=100)
     rev = models.CharField(max_length=100, blank=True, null=True)
     snapshot = models.TextField(blank=True, null=True)
     reviewed = models.BooleanField(default=False)

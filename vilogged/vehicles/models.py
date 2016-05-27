@@ -11,7 +11,7 @@ class Vehicles(models.Model):
     license = models.CharField(max_length=50, blank=True)
     model = models.CharField(max_length=50, blank=True, null=True)
     type = models.CharField(max_length=50, blank=True, null=True)
-    color = models.CharField(blank=True, null=True, max_length=20)
+    color = models.CharField(blank=True, null=True, max_length=100)
     created = models.DateTimeField(auto_now_add=True)
     modified = models.DateTimeField(auto_now=True)
     created_by = models.ForeignKey(UserProfile, blank=True, null=True, related_name='ve_created_by')

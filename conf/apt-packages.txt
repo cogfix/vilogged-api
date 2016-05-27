@@ -16,4 +16,3 @@ uwsgi-plugin-python
 npm
 nginx
 curl
-python-mysqldb
