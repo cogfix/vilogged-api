@@ -53,6 +53,9 @@ class MessageQueue(models.Model):
     created_by = models.ForeignKey(UserProfile, blank=True, null=True, related_name='me_created_by')
     modified_by = models.ForeignKey(UserProfile, blank=True, null=True, related_name='me_modified_by')
 
+    class Meta:
+        app_label = 'vilogged'
+
     def to_json(self, all_fields=False):
 
         json_object = dict(
@@ -86,6 +89,9 @@ class RestrictedItems(models.Model):
     modified = models.DateTimeField(auto_now=True)
     created_by = models.ForeignKey(UserProfile, blank=True, null=True, related_name='re_created_by')
     modified_by = models.ForeignKey(UserProfile, blank=True, null=True, related_name='re_modified_by')
+
+    class Meta:
+        app_label = 'vilogged'
 
     def to_json(self, all_fields=False):
 
@@ -125,6 +131,9 @@ class Changes(models.Model):
     snapshot = models.TextField(blank=True, null=True)
     reviewed = models.BooleanField(default=False)
     created = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        app_label = 'vilogged'
 
     def to_json(self, all_fields=False):
 
