@@ -43,6 +43,7 @@ case "$1" in
         python manage.py collectstatic --noinput
         /usr/local/bin/supervisord -c /etc/supervisor/supervisord.conf
         nginx -g "daemon off;"
+        python manage.py migrate
     ;;
     bash )
         bash
