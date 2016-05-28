@@ -42,7 +42,7 @@ class AppointmentsTestCase(TestCase):
     def test_appointment_to_json(self):
         data = Appointments.objects.get(host=self.user)
         json_data = data.to_json(True)
-        self.assertEqual(json_data.get('host', None), self.user.to_json())
-        self.assertEqual(json_data.get('visitor', None), self.visitor.to_json())
+        self.assertEqual(json_data.get('host', None).get('username'), self.user.to_json().get('username'))
+        self.assertEqual(json_data.get('visitor', None).get('first_name'), self.visitor.to_json().get('first_name'))
 
 
