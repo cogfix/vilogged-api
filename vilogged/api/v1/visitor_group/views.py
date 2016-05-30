@@ -9,9 +9,8 @@ model = VisitorGroup
 FILTER_FIELDS = [
     '_id',
     '_rev',
-    'name',
-    'black_listed',
-    'params',
+    'appointment',
+    'visitors',
     'created',
     'modified',
     'created_by',
@@ -20,9 +19,8 @@ FILTER_FIELDS = [
 SEARCH_FIELDS = [
     '_id',
     '_rev',
-    'name',
-    'black_listed',
-    'params'
+    'appointment',
+    'visitors'
 ]
 
 
@@ -30,17 +28,7 @@ class VisitorGroupSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = VisitorGroup
-        fields = (
-            '_id',
-            '_rev',
-            'name',
-            'black_listed',
-            'params',
-            'created',
-            'modified',
-            'created_by',
-            'modified_by'
-        )
+        fields = FILTER_FIELDS
 
 
 class VisitorGroupList(generics.ListAPIView):

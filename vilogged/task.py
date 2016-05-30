@@ -8,24 +8,43 @@ sys.path.insert(0, PROJECT_ROOT)
 virtual_env = os.path.join(PROJECT_ROOT, 'env')
 activate_this = os.path.join(virtual_env, 'bin/activate_this.py')
 execfile(activate_this, dict(__file__=activate_this))
-os.environ["DJANGO_SETTINGS_MODULE"] = 'core.settings'
+os.environ["DJANGO_SETTINGS_MODULE"] = 'vilogged.settings'
 import django
 django.setup()
 
-from utility.utility import Cron
 from datetime import datetime
 from vilogged.models import Appointments
-def run_cron():
-    from vilogged.models import Appointments
-    return Appointments().set_expired()
-
-
-from apscheduler.schedulers.blocking import BlockingScheduler
-
-sched = BlockingScheduler()
-
-@sched.scheduled_job('interval', hours=8)
+in_progress = dict(
+    expired=False,
+    upcoming=False
+)
 def update_expired():
-    Appointments().set_expired()
+    global in_progress
+    if not in_progress['expired']:
+        in_progress['expired'] = True
+        Appointments().set_expired()
+        in_progress['expired'] = False
 
-sched.start()
+def update_upcoming():
+    global in_progress
+    if not in_progress['upcoming']:
+        in_progress['upcoming'] = True
+        Appointments().set_upcoming()
+        in_progress['upcoming'] = False
+
+def send_notifications():
+    Appointments().send_notifications()
+
+import time
+import schedule
+
+schedule.every(60).seconds.do(send_notifications)
+schedule.every(60).seconds.do(update_expired)
+schedule.every(60).seconds.do(update_upcoming)
+
+try:
+    while 1:
+        schedule.run_pending()
+        time.sleep(1)
+except (KeyboardInterrupt, SystemExit):
+    pass

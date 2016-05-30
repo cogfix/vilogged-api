@@ -93,7 +93,7 @@ def nest_row(row, id=None):
     if id is not None:
         row['_id'] = id
     appointment = Utility.get_nested(Appointments, AppointmentSerializer, row['appointment'])
-    # print(type(row['appointment']), len(row['appointment']))
+
     if len(appointment) > 0:
         appointment['host'] = Utility.get_nested(UserProfile, UserSerializer, appointment['host'])
         appointment['visitor'] = Utility.get_nested(Visitors, VisitorSerializer, appointment['visitor'])

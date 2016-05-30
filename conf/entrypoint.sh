@@ -27,7 +27,7 @@ setup_prod_db() {
 case "$1" in
     manage )
         cd /code/
-        python manage.py runserver
+        python manage.py "${@:2}"
     ;;
     setuplocaldb )
         setup_local_db
@@ -42,8 +42,8 @@ case "$1" in
         cd /code
         python manage.py collectstatic --noinput
         /usr/local/bin/supervisord -c /etc/supervisor/supervisord.conf
-        nginx -g "daemon off;"
         python manage.py migrate
+        nginx -g "daemon off;"
     ;;
     bash )
         bash

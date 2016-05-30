@@ -1,15 +1,16 @@
 viloggedapi:
   build: .
   environment:
-      RDS_HOSTNAME: "vilogged"
-      RDS_USERNAME: ""
-      RDS_PASSWORD: ""
-      RDS_PORT: ""
-      RDS_DB_NAME: "vilogged"
+      DB_HOST: "192.168.1.122"
+      DB_USER: "postgres"
+      DB_PORT: "5432"
+      DB_NAME: "vilogged"
+      DB_ENGINE: "django.db.backends.postgresql_psycopg2"
+      DB_PASSWORD: "postgres"
       STATIC_DIR: "/var/www/static/"
   volumes:
       - ./:/code/
-  command: start
+  command: manage runserver 0.0.0.0:8000
   ports:
     - "5000:5000"
-    - "8000:8000"
+    - "7010:8000"

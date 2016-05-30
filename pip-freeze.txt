@@ -25,3 +25,4 @@ simplejson==3.8.1
 six==1.10.0
 supervisor==3.2
 psycopg2==2.6.1
+git+git://github.com/musamusa/schedule.git

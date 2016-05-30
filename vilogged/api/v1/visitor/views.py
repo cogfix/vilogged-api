@@ -29,7 +29,7 @@ FILTER_FIELDS = [
     'fingerprint',
     'signature',
     'pass_code',
-    'group',
+    'black_listed',
     'created',
     'modified',
     'created_by__name',
@@ -39,6 +39,7 @@ SEARCH_FIELDS = [
     'first_name',
     'last_name',
     'phone',
+    'black_listed',
     'email',
     'gender',
     'occupation',
@@ -82,7 +83,7 @@ class VisitorSerializer(serializers.ModelSerializer):
             'fingerprint',
             'signature',
             'pass_code',
-            'group',
+            'black_listed',
             'created',
             'modified',
             'created_by',
@@ -155,5 +156,4 @@ def nest_row(row, id=None):
     if id is not None:
         row['_id'] = id
     row['company'] = Utility.get_nested(Company, CompanySerializer, row['company'])
-    row['group'] = Utility.get_nested(VisitorGroup, VisitorGroupSerializer, row['group'])
     return row

@@ -32,6 +32,7 @@ class Appointments(models.Model):
     modified = models.DateTimeField(auto_now=True)
     created_by = models.ForeignKey(UserProfile, blank=True, null=True, related_name='app_created_by')
     modified_by = models.ForeignKey(UserProfile, blank=True, null=True, related_name='app_modified_by')
+    is_deleted = models.BooleanField(default=False)
     objects = ModelInstanceManager()
 
     class Meta:
@@ -60,6 +61,10 @@ class Appointments(models.Model):
             return self.REJECTED
         if item['is_approved'] is None:
             return self.PENDING
+        if item['is_approved'] and today > item_date:
+            self.set_expired()
+            return self.EXPIRED
+
 
     def to_json(self, all_fields=False):
 
@@ -92,7 +97,6 @@ class Appointments(models.Model):
 
     @classmethod
     def set_expired(cls):
-
         active_appointment = Appointments.objects.filter(is_expired=False)
 
         if len(active_appointment) > 0:
@@ -102,15 +106,36 @@ class Appointments(models.Model):
                 if appointment.end_date >= today:
                     appointment_date = today
 
-                if appointment_date > today:
+                if appointment_date < today:
                     appointment.is_expired = True
                     appointment.save()
+
+    @classmethod
+    def set_upcoming(cls):
+        expired_appointments = Appointments.objects.filter(is_expired=True)
+        if len(expired_appointments) > 0:
+            today = date.today()
+            for appointment in expired_appointments:
+                appointment_date = appointment.end_date
+                if appointment.end_date >= today:
+                    appointment_date = today
+
+                if appointment_date >= today:
+                    appointment.is_expired = False
+                    appointment.save()
+
+    @classmethod
+    def send_notifications(cls):
+        upcoming_appointments = Appointments.objects.filter(is_expired=False)
+
+
+
 
 
 class AppointmentLogs(models.Model):
     _id = models.CharField(max_length=100, unique=True, primary_key=True)
     _rev = models.CharField(max_length=100,  unique=True, editable=False)
-    appointment = models.CharField(Appointments, max_length=50, blank=True, null=True)
+    appointment = models.CharField(max_length=50, blank=True, null=True)
     checked_in = models.DateTimeField(default=None, blank=True, null=True)
     checked_out = models.DateTimeField(blank=True, null=True)
     label_code = models.CharField(max_length=50, null=True, blank=True)
@@ -124,6 +149,14 @@ class AppointmentLogs(models.Model):
 
     def __unicode__(self):
         return '{}'.format(self.appointment)
+
+    def get_logs(self, appointment_id):
+        rlogs = AppointmentLogs.objects.filter(appointment=appointment_id)
+        logs = []
+        if len(rlogs) > 0:
+            for log in rlogs:
+                logs.append(log.to_json())
+        return logs
 
     def to_json(self, all_fields=False):
 

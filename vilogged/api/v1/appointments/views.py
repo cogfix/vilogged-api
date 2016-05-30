@@ -130,6 +130,7 @@ class AppointmentDetail(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixi
         else:
             row = instance.to_json(True)
             row['status'] = Appointments().get_status(row)
+            row['logs'] = AppointmentLogs().get_logs(row.get('_id'))
             return Response(row)
 
     def put(self, request, *args, **kwargs):

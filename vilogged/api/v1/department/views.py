@@ -75,8 +75,6 @@ class DepartmentDetail(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixin
         except Department.DoesNotExist:
             user_exists = False
 
-        print (user_exists)
-
         if user_exists:
             return self.update(request, *args, **kwargs)
         else:
