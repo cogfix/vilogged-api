@@ -16,6 +16,7 @@ list_of_models = (
     'Vehicles',
     'Entrance',
     'VisitorGroup',
+    'VisitorTypes',
     'Company',
     'Visitors',
     'Appointments',
@@ -154,7 +155,7 @@ class Changes(models.Model):
 
         return json_object
 
-from visitors.models import Visitors, VisitorGroup
+from visitors.models import Visitors, VisitorGroup, VisitorTypes
 from company.models import Company
 from department.models import Department
 from entrance.models import Entrance

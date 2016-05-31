@@ -24,20 +24,30 @@ WORKDIR /code
 COPY ./ /code/
 
 RUN mkdir -p /var/log/vilogged
+RUN mkdir -p /var/www/dist
 
 ADD conf/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
 RUN mkdir -p /etc/supervisor/conf.d && mkdir -p /var/log/supervisor
 RUN ln -sf /code/conf/supervisor.vilogged.conf /etc/supervisor/conf.d/vilogged.conf
+RUN ln -sf /code/conf/supervisor.vilogged-cron.conf /etc/supervisor/conf.d/vilogged-cron.conf
 RUN ln -sf /code/conf/supervisord.conf /etc/supervisor/supervisord.conf
+RUN git clone https://github.com/cogfix/vilogged-client.git
+RUN cp -r /code/vilogged-client/dist /var/www/
+RUN mv /code/vilogged-client/dist/assets/config.sample.js /var/www/dist/config.js
+RUN rm -r vilogged-client
 
 ADD conf/nginx.vilogged.conf /etc/nginx/sites-enabled/default
+ADD conf/nginx.vilogged-client.conf /etc/nginx/sites-enabled/vilogged.com
 
 RUN mkdir -p /var/www/static && chmod -R 760 /var/www/static/ && chown -R www-data:www-data /var/www/static
 
-EXPOSE 5000
+EXPOSE 7010
 EXPOSE 8000
+EXPOSE 587
+EXPOSE 25
+EXPOSE 7000
 
 ENTRYPOINT ["entrypoint.sh"]
 CMD ["start"]

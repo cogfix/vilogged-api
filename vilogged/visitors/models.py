@@ -4,6 +4,40 @@ from vilogged.company.models import Company
 from utility.utility import Utility
 from datetime import date, datetime
 
+class VisitorTypes(models.Model):
+    _id = models.CharField(max_length=100, unique=True, primary_key=True)
+    _rev = models.CharField(max_length=100,  unique=True, editable=False)
+    name = models.CharField(max_length=100, blank=True, null=True)
+    black_listed = models.BooleanField(default=False)
+    created = models.DateTimeField(auto_now=True)
+    modified = models.DateTimeField(auto_now=True)
+    created_by = models.CharField(max_length=100, blank=True, null=True)
+    modified_by = models.CharField(max_length=100, blank=True, null=True)
+
+    class Meta:
+        app_label = 'visitors'
+
+    def __unicode__(self):
+        return '{0}'.format(self.name)
+
+    def to_json(self, all_fields=False):
+
+        json_object = dict(
+            _id=self._id,
+            _rev=self._rev,
+            name=self.name,
+            black_listed=self.black_listed,
+            created=Utility.format_datetime(self.created),
+            modified=Utility.format_datetime(self.modified),
+            created_by=Utility.get_instance_fields(self.created_by, ['_id', 'username']),
+            modified_by=Utility.get_instance_fields(self.modified_by, ['_id', 'username'])
+        )
+
+        if all_fields:
+            json_object.update(dict())
+
+        return json_object
+
 
 class VisitorGroup(models.Model):
     _id = models.CharField(max_length=100, unique=True, primary_key=True)
@@ -59,6 +93,7 @@ class Visitors(models.Model):
     fingerprint = models.TextField(blank=True, null=True)
     signature = models.TextField(blank=True, null=True)
     pass_code = models.CharField(max_length=50, blank=True, null=True)
+    type = models.ForeignKey(VisitorTypes, blank=True, null=True)
     created = models.DateTimeField(auto_now_add=True)
     modified = models.DateTimeField(auto_now=True)
     created_by = models.ForeignKey(UserProfile, blank=True, null=True, related_name='created_by')
@@ -88,6 +123,7 @@ class Visitors(models.Model):
             state_of_origin=self.state_of_origin,
             lga_of_origin=self.lga_of_origin,
             pass_code=self.pass_code,
+            type=self.get_type(),
             created=Utility.format_datetime(self.created),
             modified=Utility.format_datetime(self.modified),
             created_by=Utility.return_instance_id(self.created_by),
@@ -103,11 +139,11 @@ class Visitors(models.Model):
 
         return json_object
 
-    def get_group(self):
+    def get_type(self):
 
-        if self.group is not None:
-            return self.group.to_json()
-        return self.group
+        if self.type is not None:
+            return self.type.to_json()
+        return self.type
 
     def get_company(self):
 

@@ -10,7 +10,10 @@ viloggedapi:
       STATIC_DIR: "/var/www/static/"
   volumes:
       - ./:/code/
+      - ./local_assets:/var/www/dist/
   command: manage runserver 0.0.0.0:8000
   ports:
-    - "5000:5000"
-    - "7010:8000"
+    - "7010:7010"
+    - "8000:8000"
+    - "587:587"
+    - "25:25"

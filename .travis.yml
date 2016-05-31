@@ -30,7 +30,7 @@ before_script:
   - docker-compose build viloggedapi
 
 script:
-  - docker-compose run viloggedapi test_coverage
+  - docker-compose run  -e DB_ENGINE="django.db.backends.sqlite3" -e DB_HOST="" viloggedapi test_coverage
 
 after_success:
   - sudo chmod +x travis_deploy.sh

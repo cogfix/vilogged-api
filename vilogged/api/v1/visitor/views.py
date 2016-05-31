@@ -1,4 +1,4 @@
-from rest_framework import serializers, generics, mixins, status, permissions
+from rest_framework import serializers, generics, mixins, status, permissions, views
 from django.core import serializers as dj_serializer
 from rest_framework.response import Response
 from vilogged.company.models import Company
@@ -91,18 +91,15 @@ class VisitorSerializer(serializers.ModelSerializer):
         )
 
 
-class VisitorList(generics.ListAPIView):
+class VisitorList(views.APIView):
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
 
     def get(self, request, **kwargs):
         model_data = PaginationBuilder().get_paged_data(model, request, FILTER_FIELDS, SEARCH_FIELDS)
 
         row_list = []
-        data = json.loads(dj_serializer.serialize("json", model_data['model_list']))
-        for obj in data:
-            row = obj['fields']
-            del row['image']
-            row = nest_row(row, obj['pk'])
+        for obj in model_data['model_list']:
+            row = obj.to_json()
             row_list.append(row)
         return Response({
             'count': model_data['count'],
