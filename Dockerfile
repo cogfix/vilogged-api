@@ -35,7 +35,7 @@ RUN ln -sf /code/conf/supervisor.vilogged-cron.conf /etc/supervisor/conf.d/vilog
 RUN ln -sf /code/conf/supervisord.conf /etc/supervisor/supervisord.conf
 RUN git clone https://github.com/cogfix/vilogged-client.git
 RUN cp -r /code/vilogged-client/dist /var/www/
-RUN mv /code/vilogged-client/dist/assets/config.sample.js /var/www/dist/config.js
+RUN mv /code/vilogged-client/dist/config/config.sample.js /var/www/dist/config/config.js
 RUN rm -r vilogged-client
 
 ADD conf/nginx.vilogged.conf /etc/nginx/sites-enabled/default
