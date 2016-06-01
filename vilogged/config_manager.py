@@ -3,7 +3,7 @@ import os
 
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PROJECT_PARENT = os.path.dirname(PROJECT_ROOT)
-config_file = os.path.join(PROJECT_ROOT, 'config.json')
+config_file = os.path.join(PROJECT_ROOT, 'local_assets/config.json')
 
 class ConfigManager(object):
 
