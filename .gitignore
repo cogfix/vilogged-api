@@ -1,7 +1,7 @@
 vi-server.out.log
 env
 *.pyc
-config.json
+local_assets/config.json
 db.sqlite
 .idea
 core/static/*
