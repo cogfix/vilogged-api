@@ -45,8 +45,6 @@ RUN mkdir -p /var/www/static && chmod -R 760 /var/www/static/ && chown -R www-da
 
 EXPOSE 7010
 EXPOSE 8000
-EXPOSE 587
-EXPOSE 25
 EXPOSE 7000
 
 ENTRYPOINT ["entrypoint.sh"]
