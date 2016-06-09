@@ -112,13 +112,15 @@ WSGI_APPLICATION = 'vilogged.wsgi.application'
 DATABASES = {
     'default': {}
 }
-DATABASES['default']['NAME'] = os.environ.get('DB_NAME',  DB_CONFIG['name'])
-DATABASES['default']['ENGINE'] = os.environ.get('DB_ENGINE', DB_CONFIG['engine'])
-DATABASES['default']['HOST'] = os.environ.get('DB_HOST', DB_CONFIG['host'])
-DATABASES['default']['USER'] = os.environ.get('DB_USER', DB_CONFIG['user'])
-DATABASES['default']['PASSWORD'] = os.environ.get('DB_PASSWORD', DB_CONFIG['password'])
-if os.environ.get('DB_PORT', DB_CONFIG['port']) :
-    DATABASES['default']['PORT'] = os.environ.get('DB_PORT', DB_CONFIG['port'])
+DATABASES['default']['NAME'] = DB_CONFIG['name']
+DATABASES['default']['ENGINE'] = DB_CONFIG['engine']
+DATABASES['default']['HOST'] = DB_CONFIG['host']
+DATABASES['default']['USER'] = DB_CONFIG['user']
+DATABASES['default']['PASSWORD'] = DB_CONFIG['password']
+if DB_CONFIG.get('port'):
+    DATABASES['default']['PORT'] = DB_CONFIG['port']
+if DB_CONFIG.get('options'):
+    DATABASES['default']['OPTIONS'] = DB_CONFIG['options']
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.8/topics/i18n/

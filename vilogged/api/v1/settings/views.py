@@ -12,8 +12,6 @@ class ConfigManagerView(views.APIView):
         config = ConfigManager().get_config(type)
         return Response(config)
 
-class ManageConfig(views.APIView):
-
     def put_or_post(self, request, **kwargs):
         type = kwargs['type']
         config = ConfigManager().get_config()
@@ -31,3 +29,5 @@ class ManageConfig(views.APIView):
 
     def post(self, request, **kwargs):
         return self.put_or_post(request, **kwargs)
+
+

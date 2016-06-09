@@ -161,7 +161,7 @@ class Utility(object):
             query_string = request.query_params['q']
             search_fields = Utility.filter_search_field(request, search_fields)
             entry_query = Utility.get_query(query_string, search_fields)
-            found_entries = model.objects.filter(entry_query).order_by(order_field)
+            found_entries = model.objects.filter(entry_query).order_by(order_field.replace('.', '__'))
 
         return found_entries
 
@@ -278,7 +278,7 @@ class PaginationBuilder(object):
     @classmethod
     def get_paged_data(cls, model, request, filter_fields, search_fields, def_order_by='-created', extra_filters=None):
         query = Utility.build_filter(filter_fields, request.query_params, model)
-        order_by = request.query_params.get('order_by', def_order_by)
+        order_by = request.query_params.get('order_by', def_order_by).replace('.', '__')
         _model_list = model.objects.filter(**query).order_by(order_by)
         #print (model.objects.filter(**query).order_by(order_by).query.sql_with_params())
         if ('q' in request.query_params) and request.query_params['q'].strip():
