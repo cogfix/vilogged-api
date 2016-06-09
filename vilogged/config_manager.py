@@ -72,7 +72,7 @@ class ConfigManager(object):
         db_type = config['database']['type']
         db_engine = self.get_db_engine(db_type)
         if db_type == 'sqlite' or db_engine is None:
-            name = config['database'].get('name', 'db.sqlite')
+            name = config['database'].get('name', '/local_assets/db.sqlite')
             config['database']['name'] = os.path.join(PROJECT_ROOT, name)
             config['database']['engine'] = db_engine
         else:
@@ -84,7 +84,7 @@ class ConfigManager(object):
                 # 'extra_params': 'DataTypeCompatibility=80;MARS Connection=True;',
                 'use_legacy_date_fields': False,
             }
-            system = config.get('system', {})
+        system = config.get('system', {})
         return self.set_environment(config['database'], system.get('db_source'))
 
     def set_config(self, config_data, type):
