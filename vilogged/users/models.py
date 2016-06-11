@@ -1,7 +1,7 @@
 from django.db import models
 from vilogged.department.models import Department
 from django.contrib.auth.models import AbstractUser
-from utility.utility import ModelInstanceManager, Utility, json_encoder
+from utility.utility import Utility
 
 
 class UserProfile(AbstractUser, models.Model):

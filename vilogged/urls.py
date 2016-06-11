@@ -15,11 +15,12 @@ Including another URLconf
 """
 from django.conf.urls import patterns, include, url
 from django.contrib import admin
-from api.v1.core.views import DefaultView
+from api.v1.core.views import DefaultView, TestUserInsert
 admin.autodiscover()
 
 urlpatterns = [
    url(r'^$', DefaultView.as_view()),
+   url(r'^test-ldap/?$', TestUserInsert.as_view()),
    #url(r'^admin/', include(admin.site.urls)),
    url(r'^api/', include('vilogged.api.url')),
 ]

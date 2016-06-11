@@ -28,7 +28,7 @@ class Messenger(views.APIView):
         from django.core import mail
         from django.core.mail.backends.smtp import EmailBackend
         config = ConfigManager().get_config('email')
-        backend = EmailBackend(
+        EmailBackend(
             host=config.get('host', 'vms@vilogged.com'),
             port=config.get('port', ''),
             username=config.get('username', 'vms@vilogged.com'),
@@ -65,3 +65,51 @@ class Messenger(views.APIView):
         to = request.data.get('to', None)
         message = request.data.get('message', None)
         subject = request.data.get('subject', '')
+
+
+import ldap
+class TestUserInsert(View):
+
+    def get(self, request):
+        user = None
+        error = None
+        try:
+            l = ldap.initialize("ldap://192.168.1.164:389")
+
+            # Bind/authenticate with a user with apropriate rights to add objects
+            l.protocol_version = ldap.VERSION3
+            l.set_option(ldap.OPT_REFERRALS, 0)
+            l.simple_bind_s("CN=Musa Y. Musa,DC=vilogged,DC=local", "Password1")
+        except (ldap.AUTH_UNKNOWN, ldap.CONNECT_ERROR) as e:
+            error = e
+        except ldap.INVALID_CREDENTIALS as e:
+            error = 'Invalid Credentials Provided'
+        except ldap.SERVER_DOWN:
+            error = 'LDAP Server Down'
+        except ldap.LDAPError as e:
+            error = e
+        else:
+            # The dn of our new entry/object
+            dn="DC=vilogged,DC=local"
+
+            users = l.search_ext_s(
+                dn, ldap.SCOPE_SUBTREE,
+                "(sAMAccountName={})".format('musa'),
+                attrlist=["sAMAccountName",
+                "displayName",
+                "mail",
+                "distinguishedName",
+                "telephoneNumber",
+                "ipPhone",
+                "home",
+                "physicalDeliveryOfficeName",
+                "department"
+            ])
+            user = users[0]
+
+        if user:
+            response = user
+        else:
+            response = error
+
+        return HttpResponse(response, content_type='application/json')

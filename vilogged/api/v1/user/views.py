@@ -1,15 +1,13 @@
 from rest_framework import serializers, generics, mixins, views, status, permissions
-from django.core import serializers as dj_serializer
 from rest_framework.response import Response
 from django.contrib.auth.hashers import make_password
 from utility.utility import Utility, PaginationBuilder
 from django.contrib.auth import authenticate
 from rest_framework.authtoken.models import Token
 from vilogged.config_manager import ConfigManager
-from vilogged.ldap import LDAPManager
+from vilogged.ldap_auth import LDAPManager
 from vilogged.department.models import Department
 from vilogged.users.models import UserProfile
-from vilogged.api.v1.department.views import DepartmentSerializer
 
 model = UserProfile
 
@@ -141,27 +139,44 @@ class AuthUser(views.APIView):
 
     permission_classes = (permissions.AllowAny,)
 
-    def post(self, request):
+    @classmethod
+    def system_auth(cls, username, password):
+        user = authenticate(username=username, password=password)
+        if user:
+            response= dict(authenticated=True, user=user, reason=None)
+        else:
+            response = dict(authenticated=False, user=None, reason='Invalid Credentials')
 
-        config = ConfigManager().get_config()
-        user = None
+        return response
+
+    @classmethod
+    def post(cls, request):
+
+        config = ConfigManager().get_config('system')
         username = request.data.get('username', None)
         password = request.data.get('password', None)
+        auth_source = config.get('authSource', 'api')
 
-        if config.get('authType', 'api') == 'api':
-            user = authenticate(username=username, password=password)
+        if auth_source == 'api':
+            response = cls.system_auth(username, password)
 
-        if config.get('authType', 'api') == 'ldap':
-            user = LDAPManager().ldap_login(username, password)
+        if auth_source == 'ldap':
+            response = LDAPManager().ldap_login(username, password)
 
-        if user is not None:
+        if auth_source == 'any':
+            response = LDAPManager().ldap_login(username, password)
+            if response['authenticated'] is not True:
+                response = cls.system_auth(username, password)
+
+        if response['authenticated']:
+            user = response['user']
             if user.is_active:
                 token = Token.objects.get(user=user)
                 data = user.to_json(True)
                 del data['password']
                 return Response({'user': data, 'token': token.key})
             else:
-                return Response({'detail': 'User not active'}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({'detail': 'User not active'}, status=status.HTTP_401_UNAUTHORIZED)
 
-        return Response({'detail': 'invalid credentials provided'}, status=status.HTTP_401_UNAUTHORIZED)
+        return Response({'detail': response.get('reason')}, status=status.HTTP_401_UNAUTHORIZED)
 

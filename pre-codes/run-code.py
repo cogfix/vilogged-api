@@ -12,11 +12,8 @@ os.environ["DJANGO_SETTINGS_MODULE"] = 'vilogged.settings'
 import django
 django.setup()
 
-from vilogged.appointments.models import Appointments
-from datetime import datetime, date
-import json
+from vilogged.users.models import UserProfile
 
-data = Appointments.objects.to_json()
-print (json.dumps(data[0]['visitor']))
-# print (data[0]['host']['groups'])
+print (UserProfile.objects.get(username='admin'))
+
 

@@ -8,7 +8,7 @@ import json
 class ConfigManagerView(views.APIView):
 
     def get(self, request, **kwargs):
-        type = request.query_params.get('type', None)
+        type = self.kwargs.get('type')
         config = ConfigManager().get_config(type)
         return Response(config)
 

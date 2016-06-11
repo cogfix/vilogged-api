@@ -122,6 +122,7 @@ if DB_CONFIG.get('port'):
 if DB_CONFIG.get('options'):
     DATABASES['default']['OPTIONS'] = DB_CONFIG['options']
 
+
 # Internationalization
 # https://docs.djangoproject.com/en/1.8/topics/i18n/
 

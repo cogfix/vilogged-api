@@ -51,7 +51,6 @@ class ConfigManager(object):
         else:
             config = ConfigManager.default_config()
             self.create_config(config)
-
         if type == 'database':
             return self._get_db_config(config)
         if type is None:
@@ -85,7 +84,7 @@ class ConfigManager(object):
                 'use_legacy_date_fields': False,
             }
         system = config.get('system', {})
-        return self.set_environment(config['database'], system.get('db_source'))
+        return self.set_environment(config['database'], system.get('dbSource'))
 
     def set_config(self, config_data, type):
         config = self.get_config()
@@ -93,7 +92,7 @@ class ConfigManager(object):
         ConfigManager.create_config(config)
 
     def set_environment(self, db_config, use_env):
-        if use_env and os.environ.get('DB_NAME'):
+        if (use_env == 'environment' or use_env is None) and os.environ.get('DB_NAME'):
             db_config['name'] = os.environ.get('DB_NAME')
             db_config['engine'] = os.environ.get('DB_ENGINE')
             db_config['password'] = os.environ.get('DB_PASSWORD')
