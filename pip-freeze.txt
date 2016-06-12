@@ -25,4 +25,9 @@ simplejson==3.8.1
 six==1.10.0
 supervisor==3.2
 psycopg2==2.6.1
+python-ldap==2.4.25
+python-tds==1.8.2
 git+git://github.com/musamusa/schedule.git
+django-sqlserver==1.9
+django-mssql==1.8a0
+request==0.0.5
