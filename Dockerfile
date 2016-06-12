@@ -15,6 +15,7 @@ RUN cat /tmp/apt-packages.txt | xargs apt-get --yes --force-yes install
 RUN apt-get install freetds-common freetds-bin tdsodbc unixodbc subversion -y
 RUN apt-get build-dep pyodbc -y
 RUN apt-get install postgresql-server-dev-9.3 --fix-missing --yes --force-yes
+RUN apt-get install libsasl2-dev python-dev libldap2-dev libssl-dev --fix-missing --yes --force-yes
 
 ADD pip-freeze.txt /tmp/requirements.txt
 RUN pip install -r /tmp/requirements.txt
