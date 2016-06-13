@@ -276,7 +276,8 @@ class Utility(object):
 class PaginationBuilder(object):
 
     @classmethod
-    def get_paged_data(cls, model, request, filter_fields, search_fields, def_order_by='-created', extra_filters=None):
+    def get_paged_data(cls, model, request, filter_fields, search_fields, def_order_by='-created',
+                       extra_filters=None, default_page_size=1):
         query = Utility.build_filter(filter_fields, request.query_params, model)
         order_by = request.query_params.get('order_by', def_order_by).replace('.', '__')
         _model_list = model.objects.filter(**query).order_by(order_by)
@@ -289,7 +290,7 @@ class PaginationBuilder(object):
         next = None
         prev = None
         count = None
-        if request.query_params.get('page', 1) != 'all':
+        if request.query_params.get('page', default_page_size) != 'all':
 
             page = int(request.query_params.get('page', 1))
             paginator = Paginator(_model_list, limit)
@@ -311,7 +312,7 @@ class PaginationBuilder(object):
                 prev = model_list.previous_page_number()
         else:
             model_list = _model_list
-
+            count = len(model_list)
         return {
             'model_list': model_list,
             'count': count,

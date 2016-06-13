@@ -3,13 +3,46 @@ from rest_framework.response import Response
 from django.http import HttpResponse
 from django.views.generic import View
 from rest_framework import views
+from django.contrib.auth.models import Permission, Group
+from utility.utility import Utility, PaginationBuilder
+from django.core import serializers as dj_serializer
 import json
 
 class DefaultView(View):
 
     def get(self, request, **kwargs):
         config = ConfigManager().get_config('system')
-        return HttpResponse(json.dumps(config), content_type='application/json')
+        page_data = dict(
+            version=config.get('version'),
+            author='Musa Musa',
+            contact='musa@musamusa.com'
+        )
+        return HttpResponse(json.dumps(page_data), content_type='application/json')
+
+class UserPermissions(views.APIView):
+    model = Permission
+
+    FILTER_FIELDS = [
+        'id',
+        'name',
+        'codename'
+    ]
+
+    def get(self, request, **kwargs):
+        model_data = PaginationBuilder().get_paged_data(self.model, request, self.FILTER_FIELDS, self.FILTER_FIELDS,
+                                                        'id', None, 'all')
+        row_list = []
+        data = json.loads(dj_serializer.serialize("json", model_data['model_list']))
+        for obj in data:
+            row = obj['fields']
+            row_list.append(row)
+        return Response({
+            'count': model_data['count'],
+            'results': row_list,
+            'next': model_data['next'],
+            'prev': model_data['prev']
+        })
+
 
 
 class Messenger(views.APIView):

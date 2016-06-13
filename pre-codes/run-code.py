@@ -13,7 +13,8 @@ import django
 django.setup()
 
 from vilogged.users.models import UserProfile
-
-print (UserProfile.objects.get(username='admin'))
+from django.contrib.auth.models import Permission, Group
+user = UserProfile.objects.all()[0]
+print (user.user_permissions)
 
 

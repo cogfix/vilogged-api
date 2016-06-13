@@ -226,7 +226,7 @@ def manage_post(sender, instance=None, created=False, **kwargs):
             pass
 
     model = sender.__name__.lower()
-    if model != 'changes' and sender.__name__ in list_of_models:
+    if model not in ['changes', 'visitorgroup'] and sender.__name__ in list_of_models:
 
         pre_saved = Changes.objects.filter(reviewed=False, model=model, row_id=instance._id)
         if len(pre_saved) > 0:

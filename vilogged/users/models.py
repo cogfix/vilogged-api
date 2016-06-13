@@ -14,6 +14,7 @@ class UserProfile(AbstractUser, models.Model):
     department = models.ForeignKey(Department, null=True, blank=True)
     designation = models.CharField(max_length=50, blank=True, null=True)
     image = models.TextField(blank=True, null=True)
+    is_removed = models.BooleanField(default=False)
 
     class Meta:
         app_label = 'users'
