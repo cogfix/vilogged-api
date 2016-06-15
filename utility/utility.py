@@ -99,7 +99,7 @@ class Utility(object):
     def return_id(model, object, unique_field):
         id = None
         params = {}
-        if object is not None and object != '' and type(object) is dict and len(object) > 0:
+        if object and object != '' and type(object) is dict and len(object) > 0:
             if object.get('_id', None) is not None:
                 unique_field = object.get('_id')
             params[unique_field] = object[unique_field]
@@ -108,8 +108,10 @@ class Utility(object):
                 id = instance[0]._id
             else:
                 object['created'] = datetime.now()
-                instance = model(**object).save()
-                id = instance._id
+                model(**object).save()
+                params[unique_field] = object[unique_field]
+                instance = model.objects.filter(**params)
+                id = instance[0]._id
         if type(object) is str or type(object) is unicode:
             id = object
         return id

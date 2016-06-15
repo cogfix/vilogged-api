@@ -64,7 +64,7 @@ class Messenger(views.APIView):
         EmailBackend(
             host=config.get('host', 'vms@vilogged.com'),
             port=config.get('port', ''),
-            username=config.get('username', 'vms@vilogged.com'),
+            username=config.get('user', 'vms@vilogged.com'),
             password=config.get('password', 'password'),
             use_tls=config.get('use_tls'),
             fail_silently=False,
@@ -78,14 +78,14 @@ class Messenger(views.APIView):
         message = request.data.get('message', None)
         subject = request.data.get('subject', '')
         mail_from = config.get('mailFrom', 'vms@vilogged.com')
-        reply_to = [config.get('reply_to', 'vms@vilogged.com')]
+        reply_to = [config.get('replyTo', 'vms@vilogged.com')]
 
         with mail.get_connection(backend='django.core.mail.backends.smtp.EmailBackend') as connection:
             email = mail.EmailMessage(
                 subject,
                 message,
                 mail_from,
-                [to],
+                to,
                 [],
                 connection=connection,
                 reply_to=reply_to
