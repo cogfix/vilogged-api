@@ -58,40 +58,52 @@ class Messenger(views.APIView):
 
 
     def send_email(self, request):
-        from django.core import mail
-        from django.core.mail.backends.smtp import EmailBackend
         config = ConfigManager().get_config('email')
-        EmailBackend(
-            host=config.get('host', 'vms@vilogged.com'),
-            port=config.get('port', ''),
-            username=config.get('user', 'vms@vilogged.com'),
-            password=config.get('password', 'password'),
-            use_tls=config.get('use_tls'),
-            fail_silently=False,
-            use_ssl=config.get('use_ssl'),
-            timeout=config.get('timeout'),
-            ssl_keyfile=config.get('ssl_keyfile'),
-            ssl_certfile=config.get('ssl_certfile')
-        )
-
         to = request.data.get('to', None)
         message = request.data.get('message', None)
         subject = request.data.get('subject', '')
-        mail_from = config.get('mailFrom', 'vms@vilogged.com')
-        reply_to = [config.get('replyTo', 'vms@vilogged.com')]
+        mail_from = config.get('fromName', 'Online VMS')
+        reply_to = config.get('replyTo')
+        error = ''
 
-        with mail.get_connection(backend='django.core.mail.backends.smtp.EmailBackend') as connection:
-            email = mail.EmailMessage(
-                subject,
-                message,
-                mail_from,
-                to,
-                [],
-                connection=connection,
-                reply_to=reply_to
-            )
-            email.send()
-        return Response({})
+        try:
+            import smtplib
+            from email.mime.multipart import MIMEMultipart
+            from email.mime.text import MIMEText
+
+            me = config.get('user')
+            my_password = config.get('password')
+            you = to
+
+            msg = MIMEMultipart('alternative')
+            msg['Subject'] = subject
+            msg['From'] = '{}<{}>'.format(mail_from, config.get('user'))
+            msg['To'] = you
+            if reply_to:
+                msg.add_header('reply-to', reply_to)
+
+            html = '<html><body><p>{}</p></body></html>'.format(message)
+            part2 = MIMEText(html, 'html')
+
+            msg.attach(part2)
+
+            # Send the message via gmail's regular server, over SSL - passwords are being sent, afterall
+            s = smtplib.SMTP_SSL(config.get('host'))
+            # uncomment if interested in the actual smtp conversation
+            # s.set_debuglevel(1)
+            # do the smtp auth; sends ehlo if it hasn't been sent already
+            s.login(me, my_password)
+            s.sendmail(me, you, msg.as_string())
+            s.quit()
+        except smtplib.SMTPException as e:
+            errcode = getattr(e, 'smtp_code', -1)
+            errmsg = getattr(e, 'smtp_error', 'ignore')
+            error = '{} - {}'.format(errcode, errmsg)
+        response = 'Message sent successfully'
+        if error:
+            response = error
+
+        return Response(dict(detail=response))
 
     def send_sms(self, request):
         config = ConfigManager().get_config('sms')
