@@ -22,6 +22,22 @@ FILTER_FIELDS = [
     '_id',
     '_rev',
     'visitor',
+    'visitor__last_name',
+    'visitor__first_name',
+    'visitor__phone',
+    'visitor__email',
+    'visitor__company__name',
+    'visitor__type__name',
+    'visitor__type__black_listed',
+    'host__last_name',
+    'host__first_name',
+    'host__phone',
+    'host__email',
+    'host__department_name',
+    'host__department_floor',
+    'host__is_staff',
+    'host__is_superuser',
+    'host__is_active',
     'host',
     'representing',
     'purpose',
@@ -225,5 +241,14 @@ def extra_filters(request, list):
             return rejected()
         if load == 'in-progress':
             return  in_progress()
+    built_filter = Utility.build_filter(FILTER_FIELDS, request.query_params, Appointments)
+    query = dict()
+    print (built_filter)
+    for key in built_filter:
+        query['{}__iexact'.format(key)] = built_filter[key]
+    try:
+        list = Appointments.objects.filter(**query)
+    except Exception as e:
+        print (e)
 
     return list

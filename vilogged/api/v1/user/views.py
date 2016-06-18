@@ -21,6 +21,7 @@ FILTER_FIELDS = [
     'home_phone',
     'image',
     'department__name',
+    'department__floor',
     'department',
     'gender',
     'first_name',
@@ -81,7 +82,8 @@ model_serializer = UserSerializer
 class UserList(views.APIView):
 
     def get(self, request, **kwargs):
-        model_data = PaginationBuilder().get_paged_data(model, request, FILTER_FIELDS, SEARCH_FIELDS, '-date_joined')
+        model_data = PaginationBuilder().get_paged_data(model, request, FILTER_FIELDS, SEARCH_FIELDS, '-date_joined',
+                                                        extra_filters)
 
         row_list = []
         for obj in model_data['model_list']:
@@ -133,6 +135,18 @@ class UserDetail(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.Dest
 
     def post(self, request, *args, **kwargs):
         return self.post_or_put(request, *args, **kwargs)
+
+def extra_filters(request, list):
+    built_filter = Utility.build_filter(FILTER_FIELDS, request.query_params, model)
+    query = dict()
+    print (built_filter)
+    for key in built_filter:
+        query['{}__iexact'.format(key)] = built_filter[key]
+    try:
+        list = model.objects.filter(**query)
+    except Exception as e:
+        print (e)
+    return list
 
 
 class AuthUser(views.APIView):

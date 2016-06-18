@@ -173,6 +173,7 @@ class Utility(object):
         for key in url_params:
             src_key = key
             clean_field = Utility.clean_field(key)
+            #print (key, clean_field, fields)
             if clean_field in fields:
                 key = Utility.transform_field(key, model, clean_field)
                 query['{}'.format(key)] = Utility.format_value(clean_field, url_params[src_key], model)
@@ -199,8 +200,6 @@ class Utility(object):
             q = f_arr.pop()
             if q == 'ne':
                  field = field.replace('__iexact', '')
-
-
         return field
 
     @staticmethod
