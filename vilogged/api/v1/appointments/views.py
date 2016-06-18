@@ -243,11 +243,11 @@ def extra_filters(request, list):
             return  in_progress()
     built_filter = Utility.build_filter(FILTER_FIELDS, request.query_params, Appointments)
     query = dict()
-    print (built_filter)
+    order_by = request.query_params.get('order_by', '-created').replace('.', '__')
     for key in built_filter:
         query['{}__iexact'.format(key)] = built_filter[key]
     try:
-        list = Appointments.objects.filter(**query)
+        list = Appointments.objects.filter(**query).order_by(order_by)
     except Exception as e:
         print (e)
 

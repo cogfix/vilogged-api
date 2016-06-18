@@ -101,10 +101,11 @@ def nest_row(row, id=None):
 def extra_filters(request, list):
     built_filter = Utility.build_filter(FILTER_FIELDS, request.query_params, model)
     query = dict()
+    order_by = request.query_params.get('order_by', '-created').replace('.', '__')
     for key in built_filter:
         query['{}__iexact'.format(key)] = built_filter[key]
     try:
-        list = model.objects.filter(**query)
+        list = model.objects.filter(**query).order_by(order_by)
     except Exception as e:
         print (e)
     return list
