@@ -40,7 +40,8 @@ class CompanyList(views.APIView):
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
 
     def get(self, request, **kwargs):
-        model_data = PaginationBuilder().get_paged_data(model, request, FILTER_FIELDS, SEARCH_FIELDS)
+        model_data = PaginationBuilder().get_paged_data(model, request, FILTER_FIELDS, SEARCH_FIELDS, '-created',
+                                                        extra_filters)
 
         row_list = []
         data = json.loads(dj_serializer.serialize("json", model_data['model_list']))
@@ -93,3 +94,14 @@ def nest_row(row, id=None):
     if id is not None:
         row['_id'] = id
     return row
+
+def extra_filters(request, list):
+    built_filter = Utility.build_filter(FILTER_FIELDS, request.query_params, model)
+    query = dict()
+    for key in built_filter:
+        query['{}__iexact'.format(key)] = built_filter[key]
+    try:
+        list = model.objects.filter(**query)
+    except Exception as e:
+        print (e)
+    return list

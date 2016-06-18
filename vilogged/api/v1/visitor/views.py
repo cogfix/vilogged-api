@@ -20,6 +20,7 @@ FILTER_FIELDS = [
     'address',
     'gender',
     'occupation',
+    'company',
     'company__name',
     'nationality',
     'date_of_birth',
@@ -31,6 +32,8 @@ FILTER_FIELDS = [
     'pass_code',
     'black_listed',
     'type',
+    'type__name',
+    'type__black_listed',
     'created',
     'modified',
     'created_by__name',
@@ -76,7 +79,6 @@ class VisitorSerializer(serializers.ModelSerializer):
             'gender',
             'occupation',
             'company',
-            'company__name',
             'nationality',
             'date_of_birth',
             'state_of_origin',
@@ -87,8 +89,6 @@ class VisitorSerializer(serializers.ModelSerializer):
             'pass_code',
             'black_listed',
             'type',
-            'type__name',
-            'type__black_listed',
             'created',
             'modified',
             'created_by',
@@ -164,7 +164,6 @@ def nest_row(row, id=None):
 def extra_filters(request, list):
     built_filter = Utility.build_filter(FILTER_FIELDS, request.query_params, model)
     query = dict()
-    print (built_filter)
     for key in built_filter:
         query['{}__iexact'.format(key)] = built_filter[key]
     try:
