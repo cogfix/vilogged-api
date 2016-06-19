@@ -1,7 +1,7 @@
 from rest_framework import serializers, generics, mixins, status, permissions, views
 from rest_framework.response import Response
 from vilogged.company.models import Company
-from vilogged.visitors.models import Visitors, VisitorGroup
+from vilogged.visitors.models import Visitors, VisitorTypes
 from utility.utility import Utility, PaginationBuilder
 from vilogged.api.v1.company.views import CompanySerializer
 from vilogged.appointments.models import Appointments
@@ -126,6 +126,7 @@ class VisitorDetail(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.D
     def post_or_put(self, request, *args, **kwargs):
         request.data['_id'] = self.kwargs['_id']
         request.data['company'] = Utility.return_id(Company, request.data.get('company', None), 'name')
+        request.data['type'] = Utility.return_id(VisitorTypes, request.data.get('type', None), 'name')
         try:
             model.objects.get(_id=self.kwargs['_id'])
             instance_exists = True
@@ -142,13 +143,17 @@ class VisitorDetail(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.D
         if instance is None:
             return Response({'detail': 'Not Found'}, status=status.HTTP_404_NOT_FOUND)
         else:
-            return Response(instance.to_json())
+            return Response(instance.to_json(True))
 
     def put(self, request, *args, **kwargs):
         return self.post_or_put(request, *args, **kwargs)
 
     def delete(self, request, *args, **kwargs):
-        return self.destroy(request, *args, **kwargs)
+        id = self.kwargs['_id']
+        instance = model.objects.get(_id=id)
+        instance.is_removed = True
+        instance.save()
+        return Response(dict(id=instance._id, rev=instance._rev))
 
     def post(self, request, *args, **kwargs):
         return self.post_or_put(request, *args, **kwargs)

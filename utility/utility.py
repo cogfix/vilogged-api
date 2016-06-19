@@ -100,8 +100,7 @@ class Utility(object):
         id = None
         params = {}
         if object and object != '' and type(object) is dict and len(object) > 0:
-            if object.get('_id', None) is not None:
-                unique_field = object.get('_id')
+
             params[unique_field] = object[unique_field]
             instance = model.objects.filter(**params)
             if len(instance) > 0:
