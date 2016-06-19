@@ -7,13 +7,13 @@ from django.contrib.auth.models import Permission, Group
 from utility.utility import Utility, PaginationBuilder
 from django.core import serializers as dj_serializer
 import json
-
+from vilogged.settings import VILOGGED_VERSION
 class DefaultView(View):
 
     def get(self, request, **kwargs):
         config = ConfigManager().get_config('system')
         page_data = dict(
-            version=config.get('version'),
+            version=VILOGGED_VERSION,
             author='Musa Musa',
             contact='musa@musamusa.com'
         )
