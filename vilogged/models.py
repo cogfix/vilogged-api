@@ -49,6 +49,7 @@ class MessageQueue(models.Model):
     subject = models.IntegerField(blank=True, null=True)
     status = models.IntegerField(default=0)
     type = models.IntegerField(default=0)
+    is_removed = models.BooleanField(default=False)
     created = models.DateTimeField(auto_now_add=True)
     modified = models.DateTimeField(auto_now=True)
     created_by = models.ForeignKey(UserProfile, blank=True, null=True, related_name='me_created_by')
@@ -88,6 +89,7 @@ class RestrictedItems(models.Model):
     appointment_id = models.ForeignKey(Appointments, blank=True, null=True, related_name="restricted_items")
     created = models.DateTimeField(auto_now_add=True)
     modified = models.DateTimeField(auto_now=True)
+    is_removed = models.BooleanField(default=False)
     created_by = models.ForeignKey(UserProfile, blank=True, null=True, related_name='re_created_by')
     modified_by = models.ForeignKey(UserProfile, blank=True, null=True, related_name='re_modified_by')
 
@@ -128,6 +130,7 @@ class Changes(models.Model):
     model = models.CharField(max_length=100)
     type = models.CharField(max_length=100)
     row_id = models.CharField(max_length=100)
+    is_removed = models.BooleanField(default=False)
     rev = models.CharField(max_length=100, blank=True, null=True)
     snapshot = models.TextField(blank=True, null=True)
     reviewed = models.BooleanField(default=False)

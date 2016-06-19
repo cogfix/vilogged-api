@@ -169,7 +169,7 @@ class Utility(object):
 
     @staticmethod
     def build_filter(fields=None, url_params=None, model=None):
-        query = {}
+        query = dict(is_removed='false')
         for key in url_params:
             src_key = key
             clean_field = Utility.clean_field(key)

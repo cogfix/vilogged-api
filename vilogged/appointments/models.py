@@ -80,7 +80,7 @@ class Appointments(models.Model):
                         first_name=visitor.first_name,
                         phone=visitor.phone
                     ))
-                except Visitors.DoesNotExists as e:
+                except Visitors.DoesNotExist as e:
                     pass
 
         return teams
@@ -101,6 +101,7 @@ class Appointments(models.Model):
             escort_required=self.escort_required,
             is_approved=self.is_approved,
             is_expired=self.is_expired,
+            is_removed=self.is_removed,
             teams=self.get_team_members(),
             entrance=self.entrance,
             created=self.created.isoformat(),
@@ -160,6 +161,7 @@ class AppointmentLogs(models.Model):
     label_code = models.CharField(max_length=50, null=True, blank=True)
     created = models.DateTimeField(auto_now_add=True)
     modified = models.DateTimeField(auto_now=True)
+    is_removed = models.BooleanField(default=False)
     created_by = models.ForeignKey(UserProfile, blank=True, null=True, related_name='log_created_by')
     modified_by = models.ForeignKey(UserProfile, blank=True, null=True, related_name='log_modified_by')
 

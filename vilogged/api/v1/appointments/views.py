@@ -33,6 +33,7 @@ FILTER_FIELDS = [
     'host__first_name',
     'host__phone',
     'host__email',
+    'is_removed',
     'host__department_name',
     'host__department_floor',
     'host__is_staff',
@@ -64,6 +65,7 @@ SEARCH_FIELDS = [
     'start_date',
     'end_date',
     'start_time',
+    'is_removed',
     'end_time',
     'escort_required',
     'is_approved',
@@ -88,6 +90,7 @@ class AppointmentSerializer(serializers.ModelSerializer):
             'end_date',
             'start_time',
             'end_time',
+            'is_removed',
             'escort_required',
             'is_approved',
             'is_expired',
@@ -153,7 +156,11 @@ class AppointmentDetail(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixi
         return self.post_or_put(request, *args, **kwargs)
 
     def delete(self, request, *args, **kwargs):
-        return self.destroy(request, *args, **kwargs)
+        id = self.kwargs['_id']
+        instance = model.objects.get(_id=id)
+        instance.is_removed = True
+        instance.save()
+        return Response(dict(id=instance._id, rev=instance._rev))
 
     def post(self, request, *args, **kwargs):
         return self.post_or_put(request, *args, **kwargs)
@@ -192,7 +199,8 @@ def extra_filters(request, list):
                 checked_in__year=today.year,
                 checked_in__month=today.month,
                 checked_in__day=today.day,
-                checked_out=None
+                checked_out=None,
+                is_removed=False
             ).values_list('_id', flat=True)
             query = dict(_id__in=checked_in)
             if request.query_params.get('host', None) is not None:
@@ -205,7 +213,8 @@ def extra_filters(request, list):
                 Q(start_date__gte=today) | Q(start_date__lte=today),
                 Q(end_date__gte=today),
                 Q(is_expired=False),
-                Q(is_approved=True)
+                Q(is_approved=True),
+                Q(is_removed=False)
             ]
             if request.query_params.get('host', None) is not None:
                 query.append(Q(host=request.query_params['host']))
@@ -217,7 +226,8 @@ def extra_filters(request, list):
                 Q(start_date__gte=today) | Q(start_date__lte=today),
                 Q(end_date__gte=today),
                 Q(is_expired=False),
-                Q(is_approved=None)
+                Q(is_approved=None),
+                Q(is_removed=False)
             ]
             if request.query_params.get('host', None) is not None:
                 query.append(Q(host=request.query_params['host']))
@@ -227,7 +237,8 @@ def extra_filters(request, list):
             today = date.today()
             query = dict(
                 is_approved=False,
-                end_date__gt=today
+                end_date__gt=today,
+                is_removed=False
             )
             if request.query_params.get('host', None) is not None:
                 query['host'] = request.query_params['host']
@@ -243,6 +254,8 @@ def extra_filters(request, list):
             return  in_progress()
     built_filter = Utility.build_filter(FILTER_FIELDS, request.query_params, Appointments)
     query = dict()
+    if request.user.is_superuser is not True and request.user.is_staff is not True:
+        query['host'] = request.user._id
     order_by = request.query_params.get('order_by', '-created').replace('.', '__')
     for key in built_filter:
         query['{}__iexact'.format(key)] = built_filter[key]
