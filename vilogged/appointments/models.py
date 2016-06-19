@@ -4,6 +4,7 @@ from vilogged.entrance.models import Entrance
 from vilogged.users.models import UserProfile
 from vilogged.visitors.models import Visitors
 from utility.utility import ModelInstanceManager, Utility, json_encoder
+import json
 
 
 class Appointments(models.Model):
@@ -65,6 +66,24 @@ class Appointments(models.Model):
             self.set_expired()
             return self.EXPIRED
 
+    def get_team_members(self):
+        teams = []
+        if self.teams:
+            import ast
+            teams_members = ast.literal_eval(self.teams)
+            for visitor_id in teams_members:
+                try:
+                    visitor = Visitors.objects.get(_id=visitor_id)
+                    teams.append(dict(
+                        _id=visitor._id,
+                        last_name=visitor.last_name,
+                        first_name=visitor.first_name,
+                        phone=visitor.phone
+                    ))
+                except Visitors.DoesNotExists as e:
+                    pass
+
+        return teams
 
     def to_json(self, all_fields=False):
 
@@ -82,7 +101,7 @@ class Appointments(models.Model):
             escort_required=self.escort_required,
             is_approved=self.is_approved,
             is_expired=self.is_expired,
-            teams=self.teams,
+            teams=self.get_team_members(),
             entrance=self.entrance,
             created=self.created.isoformat(),
             modified=Utility.format_datetime(self.modified),
