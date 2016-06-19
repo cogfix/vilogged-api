@@ -122,7 +122,9 @@ class UserDetail(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.Dest
         if user is None:
             return Response({'detail': 'Not Found'}, status=status.HTTP_404_NOT_FOUND)
         else:
-            return Response(user.to_json())
+            profile = user.to_json(True)
+            del profile['password']
+            return Response(profile)
 
     def put(self, request, *args, **kwargs):
         return self.post_or_put(request, *args, **kwargs)
