@@ -1,6 +1,6 @@
 from django.db import models
 from vilogged.users.models import UserProfile
-from utility.utility import ModelInstanceManager, Utility
+from utility.utility import Utility
 
 
 class Company(models.Model):
@@ -12,7 +12,7 @@ class Company(models.Model):
     modified = models.DateTimeField(auto_now=True)
     created_by = models.ForeignKey(UserProfile, blank=True, null=True, related_name='co_created_by')
     modified_by = models.ForeignKey(UserProfile, blank=True, null=True, related_name='co_modified_by')
-    objects = ModelInstanceManager()
+    is_removed = models.BooleanField(default=False)
 
     class Meta:
         app_label = 'company'

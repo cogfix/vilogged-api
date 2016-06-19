@@ -1,7 +1,7 @@
 from django.db import models
 from vilogged.users.models import UserProfile
 from vilogged.appointments.models import Appointments
-from utility.utility import ModelInstanceManager, Utility
+from utility.utility import Utility
 
 
 class Vehicles(models.Model):
@@ -16,7 +16,7 @@ class Vehicles(models.Model):
     modified = models.DateTimeField(auto_now=True)
     created_by = models.ForeignKey(UserProfile, blank=True, null=True, related_name='ve_created_by')
     modified_by = models.ForeignKey(UserProfile, blank=True, null=True, related_name='ve_modified_by')
-    objects = ModelInstanceManager()
+    is_removed = models.BooleanField(default=False)
 
     class Meta:
         app_label = 'vehicles'

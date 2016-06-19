@@ -33,7 +33,7 @@ class Appointments(models.Model):
     modified = models.DateTimeField(auto_now=True)
     created_by = models.ForeignKey(UserProfile, blank=True, null=True, related_name='app_created_by')
     modified_by = models.ForeignKey(UserProfile, blank=True, null=True, related_name='app_modified_by')
-    is_deleted = models.BooleanField(default=False)
+    is_removed = models.BooleanField(default=False)
     objects = ModelInstanceManager()
 
     class Meta:

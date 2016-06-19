@@ -1,5 +1,5 @@
 from django.db import models
-from utility.utility import ModelInstanceManager, Utility
+from utility.utility import Utility
 
 
 class Department(models.Model):
@@ -12,7 +12,7 @@ class Department(models.Model):
     modified = models.DateTimeField(auto_now=True)
     created_by = models.CharField(max_length=100)
     modified_by = models.CharField(max_length=100, blank=True, null=True)
-    objects = ModelInstanceManager()
+    is_removed = models.BooleanField(default=False)
 
     class Meta:
         app_label = 'department'
