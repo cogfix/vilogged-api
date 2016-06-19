@@ -211,9 +211,4 @@ APPEND_SLASH = False
 
 SESSION_SERIALIZER = 'django.contrib.sessions.serializers.PickleSerializer'
 
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = EMAIL_CONFIG.get('host')
-EMAIL_PORT = EMAIL_CONFIG.get('port')
-EMAIL_USE_TLS = EMAIL_CONFIG.get('use_tls', True)
-EMAIL_HOST_USER = EMAIL_CONFIG.get('user')
-EMAIL_HOST_PASSWORD = EMAIL_CONFIG.get('password')
+VILOGGED_VERSION = '1.0.3'

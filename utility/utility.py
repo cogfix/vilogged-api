@@ -279,6 +279,7 @@ class PaginationBuilder(object):
     @classmethod
     def get_paged_data(cls, model, request, filter_fields, search_fields, def_order_by='-created',
                        extra_filters=None, default_page_size=1):
+
         query = Utility.build_filter(filter_fields, request.query_params, model)
         order_by = request.query_params.get('order_by', def_order_by).replace('.', '__')
         _model_list = model.objects.filter(**query).order_by(order_by)

@@ -1,11 +1,10 @@
 from rest_framework import serializers, generics, mixins, status, permissions, views
-from django.core import serializers as dj_serializer
 from rest_framework.response import Response
 from vilogged.company.models import Company
 from vilogged.visitors.models import Visitors, VisitorGroup
 from utility.utility import Utility, PaginationBuilder
 from vilogged.api.v1.company.views import CompanySerializer
-from vilogged.api.v1.visitor_group.views import VisitorGroupSerializer
+from vilogged.appointments.models import Appointments
 import json
 model = Visitors
 
@@ -125,7 +124,6 @@ class VisitorDetail(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.D
     lookup_field = '_id'
 
     def post_or_put(self, request, *args, **kwargs):
-        instance_exists = False
         request.data['_id'] = self.kwargs['_id']
         request.data['company'] = Utility.return_id(Company, request.data.get('company', None), 'name')
         try:
@@ -144,10 +142,7 @@ class VisitorDetail(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.D
         if instance is None:
             return Response({'detail': 'Not Found'}, status=status.HTTP_404_NOT_FOUND)
         else:
-            serializer = VisitorSerializer(instance)
-            data = serializer.data
-            row = nest_row(data)
-            return Response(row)
+            return Response(instance.to_json())
 
     def put(self, request, *args, **kwargs):
         return self.post_or_put(request, *args, **kwargs)
@@ -166,13 +161,21 @@ def nest_row(row, id=None):
 
 def extra_filters(request, list):
     if 'q' not in request.query_params:
+        from django.db.models import Q
+        query = []
+        if request.user.is_superuser is not True and request.user.is_staff is not True:
+            user_appointments = Appointments.objects.filter(host=request.user._id).values_list('visitor___id', flat=True)
+            query.append(Q(_id__in=user_appointments) | Q(created_by=request.user._id))
+
         built_filter = Utility.build_filter(FILTER_FIELDS, request.query_params, model)
-        query = dict()
+
         order_by = request.query_params.get('order_by', '-created').replace('.', '__')
         for key in built_filter:
-            query['{}__iexact'.format(key)] = built_filter[key]
+            pin = dict()
+            pin['{}__iexact'.format(key)] = built_filter[key]
+            query.append(Q(**pin))
         try:
-            list = model.objects.filter(**query).order_by(order_by)
+            list = model.objects.filter(*query).order_by(order_by)
         except Exception as e:
             print (e)
     return list

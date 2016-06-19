@@ -193,6 +193,7 @@ def extra_filters(request, list):
     from django.db.models import Q
     if 'load' in request.query_params:
         load = request.query_params.get('load')
+
         def in_progress():
             today = date.today()
             checked_in = AppointmentLogs.objects.filter(
@@ -205,6 +206,9 @@ def extra_filters(request, list):
             query = dict(_id__in=checked_in)
             if request.query_params.get('host', None) is not None:
                 query['host'] = request.query_params['host']
+            if request.user.is_superuser is not True and request.user.is_staff is not True:
+                query['host'] = request.user._id
+
             return Appointments.objects.filter(**query)
 
         def upcoming():
@@ -218,6 +222,8 @@ def extra_filters(request, list):
             ]
             if request.query_params.get('host', None) is not None:
                 query.append(Q(host=request.query_params['host']))
+            if request.user.is_superuser is not True and request.user.is_staff is not True:
+                query.append(Q(host=request.user._id))
             return Appointments.objects.filter(*query)
 
         def awaiting():
@@ -231,6 +237,8 @@ def extra_filters(request, list):
             ]
             if request.query_params.get('host', None) is not None:
                 query.append(Q(host=request.query_params['host']))
+            if request.user.is_superuser is not True and request.user.is_staff is not True:
+                query.append(Q(host=request.user._id))
             return Appointments.objects.filter(*query)
 
         def rejected():
@@ -242,6 +250,8 @@ def extra_filters(request, list):
             )
             if request.query_params.get('host', None) is not None:
                 query['host'] = request.query_params['host']
+            if request.user.is_superuser is not True and request.user.is_staff is not True:
+                query['host'] = request.user._id
             return Appointments.objects.filter(**query)
 
         if load == 'upcoming':
@@ -252,16 +262,17 @@ def extra_filters(request, list):
             return rejected()
         if load == 'in-progress':
             return  in_progress()
-    built_filter = Utility.build_filter(FILTER_FIELDS, request.query_params, Appointments)
-    query = dict()
-    if request.user.is_superuser is not True and request.user.is_staff is not True:
-        query['host'] = request.user._id
-    order_by = request.query_params.get('order_by', '-created').replace('.', '__')
-    for key in built_filter:
-        query['{}__iexact'.format(key)] = built_filter[key]
-    try:
-        list = Appointments.objects.filter(**query).order_by(order_by)
-    except Exception as e:
-        print (e)
+    if 'q' not in request.query_params:
+        built_filter = Utility.build_filter(FILTER_FIELDS, request.query_params, Appointments)
+        query = dict()
+        if request.user.is_superuser is not True and request.user.is_staff is not True:
+            query['host'] = request.user._id
+        order_by = request.query_params.get('order_by', '-created').replace('.', '__')
+        for key in built_filter:
+            query['{}__iexact'.format(key)] = built_filter[key]
+        try:
+            list = Appointments.objects.filter(**query).order_by(order_by)
+        except Exception as e:
+            print (e)
 
     return list
