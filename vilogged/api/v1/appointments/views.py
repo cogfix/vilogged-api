@@ -58,8 +58,10 @@ FILTER_FIELDS = [
 ]
 
 SEARCH_FIELDS = [
-    'visitor',
-    'host',
+    'visitor__first_name',
+    'visitor__last_name',
+    'host__first_name',
+    'host__last_name',
     'representing',
     'purpose',
     'start_date',
@@ -70,8 +72,7 @@ SEARCH_FIELDS = [
     'escort_required',
     'is_approved',
     'is_expired',
-    'teams',
-    'entrance'
+    'teams'
 ]
 
 
@@ -263,15 +264,27 @@ def extra_filters(request, list):
         if load == 'in-progress':
             return  in_progress()
     if 'q' not in request.query_params:
-        built_filter = Utility.build_filter(FILTER_FIELDS, request.query_params, Appointments)
+        built_filter = Utility.build_filter(FILTER_FIELDS, request.query_params, model)
         query = dict()
+        search_query = []
         if request.user.is_superuser is not True and request.user.is_staff is not True:
             query['host'] = request.user._id
         order_by = request.query_params.get('order_by', '-created').replace('.', '__')
         for key in built_filter:
-            query['{}__iexact'.format(key)] = built_filter[key]
+            if 'search' in request.query_params:
+                if key == 'host':
+                    search_query.append(Q(**{'host__last_name__icontains': built_filter[key]}) | Q(**{'host__first_name__icontains': built_filter[key]}))
+                elif key == 'visitor':
+                    search_query.append(Q(**{'visitor__last_name__icontains': built_filter[key]}) | Q(**{'visitor__first_name__icontains': built_filter[key]}))
+                else:
+                    search_query.append(Q(**{'{}__icontains'.format(key): built_filter[key]}))
+            else:
+                query['{}__iexact'.format(key)] = built_filter[key]
         try:
-            list = Appointments.objects.filter(**query).order_by(order_by)
+            if 'search' in request.query_params:
+                list = model.objects.filter(*search_query).order_by(order_by)
+            else:
+                list = model.objects.filter(**query).order_by(order_by)
         except Exception as e:
             print (e)
 

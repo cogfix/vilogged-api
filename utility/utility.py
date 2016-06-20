@@ -209,7 +209,8 @@ class Utility(object):
     @staticmethod
     def filter_search_field(request, search_fields):
         if 'only-fields' in request.query_params:
-            search_fields = request.query_params['only-fields'].split(',')
+            fields = request.query_params['only-fields'].split(',')
+            search_fields = [field.replace('.', '__') for field in fields]
         return search_fields
 
     @staticmethod

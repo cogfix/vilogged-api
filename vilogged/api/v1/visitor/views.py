@@ -177,7 +177,11 @@ def extra_filters(request, list):
         order_by = request.query_params.get('order_by', '-created').replace('.', '__')
         for key in built_filter:
             pin = dict()
-            pin['{}__iexact'.format(key)] = built_filter[key]
+
+            if 'search' in request.query_params:
+                pin['{}__icontains'.format(key)] = built_filter[key]
+            else:
+                pin['{}__iexact'.format(key)] = built_filter[key]
             query.append(Q(**pin))
         try:
             list = model.objects.filter(*query).order_by(order_by)
