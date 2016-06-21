@@ -64,6 +64,8 @@ class AppointmentLogDetail(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, m
 
     def post_or_put(self, request, *args, **kwargs):
         request.data['_id'] = self.kwargs['_id']
+        request.data['created_by'] = Utility.return_id(UserProfile, request.data.get('created_by'), '_id')
+        request.data['modified_by'] = Utility.return_id(UserProfile, request.data.get('modified_by'), '_id')
         try:
             model.objects.get(_id=self.kwargs['_id'])
             return self.update(request, *args, **kwargs)

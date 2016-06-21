@@ -132,6 +132,8 @@ class AppointmentDetail(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixi
     def post_or_put(self, request, *args, **kwargs):
         request.data['_id'] = self.kwargs['_id']
         request.data['entrance'] = Utility.return_id(Entrance, request.data.get('entrance'), 'name')
+        request.data['created_by'] = Utility.return_id(UserProfile, request.data.get('created_by'), '_id')
+        request.data['modified_by'] = Utility.return_id(UserProfile, request.data.get('modified_by'), '_id')
         try:
             model.objects.get(_id=self.kwargs['_id'])
             instance_exists = True
@@ -150,7 +152,10 @@ class AppointmentDetail(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixi
         else:
             row = instance.to_json(True)
             row['status'] = Appointments().get_status(row)
-            row['logs'] = AppointmentLogs().get_logs(row.get('_id'))
+            logs = AppointmentLogs().get_logs(row.get('_id'))
+            sorted_logs = sorted(logs, key=lambda k: k['created'], reverse=True)
+            row['logs'] = sorted_logs
+            row['latest'] = sorted_logs[0]
             return Response(row)
 
     def put(self, request, *args, **kwargs):
