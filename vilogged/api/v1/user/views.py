@@ -65,6 +65,7 @@ class UserSerializer(serializers.ModelSerializer):
             'first_name',
             'last_name',
             'is_active',
+            'password',
             'is_staff',
             'is_superuser',
             'designation',
@@ -107,7 +108,7 @@ class UserDetail(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.Dest
         request.data['department'] = Utility.return_id(Department, request.data.get('department'), 'name')
         try:
             user_instance = UserProfile.objects.get(_id=self.kwargs['_id'])
-            if request.data.get('password', None) is None or request.data.get('password', None) != '':
+            if request.data.get('password', None) is None or request.data.get('password', None) == '':
                 request.data['password'] = user_instance.password
             elif request.data.get('password', None) is not None and request.data.get('password', None) != '':
                 request.data['password'] = make_password(request.data['password'])
