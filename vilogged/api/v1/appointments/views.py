@@ -155,7 +155,8 @@ class AppointmentDetail(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixi
             logs = AppointmentLogs().get_logs(row.get('_id'))
             sorted_logs = sorted(logs, key=lambda k: k['created'], reverse=True)
             row['logs'] = sorted_logs
-            row['latest'] = sorted_logs[0]
+            if len(sorted_logs) > 0:
+                row['latest'] = sorted_logs[0]
             return Response(row)
 
     def put(self, request, *args, **kwargs):
