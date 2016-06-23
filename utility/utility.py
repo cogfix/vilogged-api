@@ -168,11 +168,12 @@ class Utility(object):
 
     @staticmethod
     def build_filter(fields=None, url_params=None, model=None):
-        query = dict(is_removed='false')
+        query = dict()
+        if model.__name__ not in ['Permission']:
+            query['is_removed'] ='false'
         for key in url_params:
             src_key = key
             clean_field = Utility.clean_field(key)
-            #print (key, clean_field, fields)
             if clean_field in fields:
                 key = Utility.transform_field(key, model, clean_field)
                 query['{}'.format(key)] = Utility.format_value(clean_field, url_params[src_key], model)
