@@ -211,4 +211,4 @@ APPEND_SLASH = False
 
 SESSION_SERIALIZER = 'django.contrib.sessions.serializers.PickleSerializer'
 
-VILOGGED_VERSION = '1.0.3'
+VILOGGED_VERSION = '1.1.1'
