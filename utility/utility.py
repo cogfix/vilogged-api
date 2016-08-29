@@ -156,14 +156,21 @@ class Utility(object):
 
     @staticmethod
     def build_query(model, request, order_field, search_fields):
-        query_string = ''
         found_entries = None
         if ('q' in request.query_params) and request.query_params['q'].strip():
             query_string = request.query_params['q']
             search_fields = Utility.filter_search_field(request, search_fields)
             entry_query = Utility.get_query(query_string, search_fields)
+        if model.__name__ == 'Appointments':
+            from vilogged.appointments.models import AppointmentLogs
+            extra_q = AppointmentLogs.objects.filter(label_code=query_string)\
+                .values_list('appointment', flat=True)
+            print (extra_q)
+            entry_query = [entry_query | Q(_id__in=extra_q)]
+            #print ([entry_query | Q(_id_in=extra_q)])
+            found_entries = model.objects.filter(*entry_query).order_by(order_field.replace('.', '__'))
+        else:
             found_entries = model.objects.filter(entry_query).order_by(order_field.replace('.', '__'))
-
         return found_entries
 
     @staticmethod
