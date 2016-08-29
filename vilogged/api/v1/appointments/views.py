@@ -209,7 +209,8 @@ def extra_filters(request, list):
                 checked_in__day=today.day,
                 checked_out=None,
                 is_removed=False
-            ).values_list('_id', flat=True)
+            ).values_list('appointment', flat=True)
+
             query = dict(_id__in=checked_in)
             if request.query_params.get('host', None) is not None:
                 query['host'] = request.query_params['host']
@@ -220,18 +221,28 @@ def extra_filters(request, list):
 
         def upcoming():
             today = date.today()
+            today = date.today()
+            checked_in = AppointmentLogs.objects.filter(
+                checked_in__year=today.year,
+                checked_in__month=today.month,
+                checked_in__day=today.day,
+                checked_out=None,
+                is_removed=False
+            ).values_list('appointment', flat=True)
+
             query = [
                 Q(start_date__gte=today) | Q(start_date__lte=today),
                 Q(end_date__gte=today),
                 Q(is_expired=False),
                 Q(is_approved=True),
-                Q(is_removed=False)
+                Q(is_removed=False),
+
             ]
             if request.query_params.get('host', None) is not None:
                 query.append(Q(host=request.query_params['host']))
             if request.user.is_superuser is not True and request.user.is_staff is not True:
                 query.append(Q(host=request.user._id))
-            return Appointments.objects.filter(*query)
+            return Appointments.objects.filter(*query).exclude(_id__in=checked_in)
 
         def awaiting():
             today = date.today()
