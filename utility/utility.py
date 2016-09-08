@@ -155,22 +155,29 @@ class Utility(object):
         return query
 
     @staticmethod
-    def build_query(model, request, order_field, search_fields):
+    def build_query(model, request, order_field, search_fields, extra_query):
         found_entries = None
         if ('q' in request.query_params) and request.query_params['q'].strip():
             query_string = request.query_params['q']
             search_fields = Utility.filter_search_field(request, search_fields)
             entry_query = Utility.get_query(query_string, search_fields)
-        if model.__name__ == 'Appointments':
-            from vilogged.appointments.models import AppointmentLogs
-            extra_q = AppointmentLogs.objects.filter(label_code=query_string)\
-                .values_list('appointment', flat=True)
-            print (extra_q)
-            entry_query = [entry_query | Q(_id__in=extra_q)]
-            #print ([entry_query | Q(_id_in=extra_q)])
-            found_entries = model.objects.filter(*entry_query).order_by(order_field.replace('.', '__'))
-        else:
-            found_entries = model.objects.filter(entry_query).order_by(order_field.replace('.', '__'))
+            if model.__name__ == 'Appointments':
+                from vilogged.appointments.models import AppointmentLogs
+                label_search = query_string
+                if len(label_search) > 12:
+                    label_search = label_search[:-1]
+                extra_q = AppointmentLogs.objects.filter(label_code=label_search)\
+                    .values_list('appointment', flat=True)
+
+                entry_query = entry_query | Q(_id__in=extra_q)
+                if extra_query:
+                    entry_query = extra_query & entry_query
+                found_entries = model.objects.filter(entry_query).order_by(order_field.replace('.', '__'))
+            else:
+                entry_query = extra_query | entry_query
+                if extra_query:
+                    entry_query = extra_query & entry_query
+                found_entries = model.objects.filter(entry_query).order_by(order_field.replace('.', '__'))
         return found_entries
 
     @staticmethod
@@ -286,14 +293,14 @@ class PaginationBuilder(object):
 
     @classmethod
     def get_paged_data(cls, model, request, filter_fields, search_fields, def_order_by='-created',
-                       extra_filters=None, default_page_size=1):
+                       extra_filters=None, default_page_size=1, extra_query=None):
 
         query = Utility.build_filter(filter_fields, request.query_params, model)
         order_by = request.query_params.get('order_by', def_order_by).replace('.', '__')
         _model_list = model.objects.filter(**query).order_by(order_by)
         #print (model.objects.filter(**query).order_by(order_by).query.sql_with_params())
         if ('q' in request.query_params) and request.query_params['q'].strip():
-            _model_list = Utility.build_query(model, request, order_by, search_fields)
+            _model_list = Utility.build_query(model, request, order_by, search_fields, extra_query)
         if extra_filters is not None:
             _model_list = extra_filters(request, _model_list)
         limit = int(request.query_params.get('limit', 10))

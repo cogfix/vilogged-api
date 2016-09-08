@@ -5,6 +5,7 @@ from vilogged.visitors.models import Visitors, VisitorTypes
 from utility.utility import Utility, PaginationBuilder
 from vilogged.api.v1.company.views import CompanySerializer
 from vilogged.appointments.models import Appointments
+from django.db.models import Q
 import json
 model = Visitors
 
@@ -102,8 +103,21 @@ class VisitorList(views.APIView):
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
 
     def get(self, request, **kwargs):
-        model_data = PaginationBuilder().get_paged_data(model, request, FILTER_FIELDS, SEARCH_FIELDS, '-created',
-                                                        extra_filters)
+        extra_query = None
+        if request.user.is_superuser is not True and request.user.is_staff is not True:
+            query = []
+            user_appointments = Appointments.objects.filter(host=request.user._id).values_list('visitor___id', flat=True)
+            extra_query = Q(_id__in=user_appointments) | Q(created_by=request.user._id)
+        model_data = PaginationBuilder().get_paged_data(
+            model,
+            request,
+            FILTER_FIELDS,
+            SEARCH_FIELDS,
+            '-created',
+            extra_filters,
+            1,
+            extra_query
+        )
 
         row_list = []
         for obj in model_data['model_list']:
@@ -166,7 +180,6 @@ def nest_row(row, id=None):
 
 def extra_filters(request, list):
     if 'q' not in request.query_params:
-        from django.db.models import Q
         query = []
         if request.user.is_superuser is not True and request.user.is_staff is not True:
             user_appointments = Appointments.objects.filter(host=request.user._id).values_list('visitor___id', flat=True)

@@ -5,7 +5,6 @@ from vilogged.users.models import UserProfile
 from vilogged.entrance.models import Entrance
 from vilogged.visitors.models import Visitors, VisitorGroup
 from rest_framework import serializers, generics, mixins, status, permissions, views
-from django.core import serializers as dj_serializer
 from rest_framework.response import Response
 from utility.utility import Utility, PaginationBuilder
 from vilogged.api.v1.company.views import CompanySerializer
@@ -14,8 +13,9 @@ from vilogged.api.v1.department.views import DepartmentSerializer
 from vilogged.api.v1.visitor.views import VisitorSerializer
 from vilogged.api.v1.user.views import UserSerializer
 from vilogged.api.v1.entrance.views import EntranceSerializer
-import json
 from datetime import datetime, date
+from django.db.models import Q
+
 model = Appointments
 
 FILTER_FIELDS = [
@@ -108,7 +108,19 @@ class AppointmentList(views.APIView):
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
 
     def get(self, request, **kwargs):
-        model_data = PaginationBuilder().get_paged_data(model, request, FILTER_FIELDS, SEARCH_FIELDS, '-created', extra_filters)
+        extra_query = None
+        if 'q' in request.query_params and request.user.is_superuser is not True and request.user.is_staff is not True:
+            extra_query = Q(host=request.user._id)
+        model_data = PaginationBuilder().get_paged_data(
+            model,
+            request,
+            FILTER_FIELDS,
+            SEARCH_FIELDS,
+            '-created',
+            extra_filters,
+            1,
+            extra_query
+        )
 
         row_list = []
         for obj in model_data['model_list']:
@@ -197,7 +209,6 @@ def nest_row(row, id=None):
 
 
 def extra_filters(request, list):
-    from django.db.models import Q
     if 'load' in request.query_params:
         load = request.query_params.get('load')
 
@@ -211,7 +222,11 @@ def extra_filters(request, list):
                 is_removed=False
             ).values_list('appointment', flat=True)
 
-            query = dict(_id__in=checked_in)
+            query = dict(
+                _id__in=checked_in,
+                is_removed=False,
+                is_expired=False
+            )
             if request.query_params.get('host', None) is not None:
                 query['host'] = request.query_params['host']
             if request.user.is_superuser is not True and request.user.is_staff is not True:
@@ -220,7 +235,6 @@ def extra_filters(request, list):
             return Appointments.objects.filter(**query)
 
         def upcoming():
-            today = date.today()
             today = date.today()
             checked_in = AppointmentLogs.objects.filter(
                 checked_in__year=today.year,
