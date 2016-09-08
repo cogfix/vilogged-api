@@ -174,7 +174,6 @@ class Utility(object):
                     entry_query = extra_query & entry_query
                 found_entries = model.objects.filter(entry_query).order_by(order_field.replace('.', '__'))
             else:
-                entry_query = extra_query | entry_query
                 if extra_query:
                     entry_query = extra_query & entry_query
                 found_entries = model.objects.filter(entry_query).order_by(order_field.replace('.', '__'))

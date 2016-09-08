@@ -105,7 +105,6 @@ class VisitorList(views.APIView):
     def get(self, request, **kwargs):
         extra_query = None
         if request.user.is_superuser is not True and request.user.is_staff is not True:
-            query = []
             user_appointments = Appointments.objects.filter(host=request.user._id).values_list('visitor___id', flat=True)
             extra_query = Q(_id__in=user_appointments) | Q(created_by=request.user._id)
         model_data = PaginationBuilder().get_paged_data(
